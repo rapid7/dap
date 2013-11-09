@@ -129,7 +129,7 @@ class FilterSplitLine
         end
       end
     end
-   [ lines ]
+   lines.length == 0 ? [ doc ] : [ lines ]
   end  
 end
 
@@ -144,8 +144,71 @@ class FilterSplitWord
         end
       end
     end
-   [ lines ]
+   lines.length == 0 ? [ doc ] : [ lines ]
   end  
+end
+
+class FilterSplitTab
+  include Base
+  def process(doc)
+    lines = [ ]
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        doc[k].to_s.split(/\t/).each do |line|
+          lines << doc.merge({ "#{k}.tab" => line })
+        end
+      end
+    end
+   lines.length == 0 ? [ doc ] : [ lines ]
+  end  
+end
+
+class FilterFieldSplitLine
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        lcount = 1
+        doc[k].to_s.split(/\n/).each do |line|
+          doc.merge!({ "#{k}.f#{lcount}" => line })
+          lcount += 1
+        end
+      end
+    end
+   [ doc ]
+  end  
+end
+
+class FilterFieldSplitWord
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        wcount = 1
+        doc[k].to_s.split(/\W/).each do |word|
+          doc.merge!({ "#{k}.f#{wcount}" => word })
+          wcount += 1
+        end
+      end
+    end
+   [ doc ]
+  end  
+end
+
+class FilterFieldSplitTab
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        wcount = 1
+        doc[k].to_s.split(/\t/).each do |word|
+          doc.merge!({ "#{k}.f#{wcount}" => word })
+          wcount += 1
+        end
+      end
+    end
+   [ doc ]
+  end
 end
 
 
