@@ -49,7 +49,7 @@ class FilterInsert
   end
 end
 
-class FilterSmatch
+class FilterInclude
   include Base
   def process(doc)
     self.opts.each_pair do |k,v|
@@ -61,7 +61,7 @@ class FilterSmatch
   end
 end
 
-class FilterSavoid
+class FilterExclude
   include Base
   def process(doc)
     self.opts.each_pair do |k,v|
@@ -106,7 +106,7 @@ class FilterTransform
   end
 end
 
-class FilterLimitLen
+class FilterTruncate
   include Base
   def process(doc)
     self.opts.each_pair do |k,v|
@@ -118,7 +118,7 @@ class FilterLimitLen
   end
 end
 
-class FilterLineSplit
+class FilterSplitLine
   include Base
   def process(doc)
     lines = [ ]
@@ -133,7 +133,7 @@ class FilterLineSplit
   end  
 end
 
-class FilterWordSplit
+class FilterSplitWord
   include Base
   def process(doc)
     lines = [ ]
@@ -148,13 +148,6 @@ class FilterWordSplit
   end  
 end
 
-class FilterTrace
-  include Base
-  def process(doc)
-    $stderr.puts "TRACE: #{Time.now.to_s} #{doc.inspect}"
-    [ doc ]
-  end
-end
 
 end
 end

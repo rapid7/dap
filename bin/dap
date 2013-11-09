@@ -2,6 +2,7 @@
 
 $:.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 
+require 'bundler/setup'
 require 'shellwords'
 require 'dap'
 
@@ -43,7 +44,8 @@ def show_filters
   exit(1)
 end
 
-args = []
+trace = false
+args  = []
 
 #
 # Tokenize on + then treat each stage as a separate name + argument list
@@ -55,6 +57,11 @@ ARGV.join(' ').split(/\s*\+\s*/).each do |bit|
   
   # Check the first argument for help or usage flags
   arg  = aset.first
+
+  if arg == "--trace"
+    trace = true
+    arg   = aset.shift
+  end
 
   if arg == "-h" or arg == "--help"
     usage
@@ -97,8 +104,12 @@ while true
 
   docs = [ data ]
   
+  fcount = 1
   filters.each do |f|
+    $stderr.puts "T:  #{" " * (fcount * 2)}#{f.name} -> #{docs.inspect} "
     docs = docs.collect {|doc| f.process(doc) }.flatten
+    $stderr.puts "T:  #{" " * (fcount * 2)}#{" " * f.name.length} == #{docs.inspect}"
+    fcount += 1
     break if docs.length == 0
   end
 

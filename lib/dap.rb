@@ -34,8 +34,10 @@ module Dap
     # Ex: FilterLimitLen => limit_len
     #
     def self.name_from_class(name)
-      name.to_s.gsub(/([A-Z][a-z])/) { |c| "_#{c[0,1].downcase}#{c[1,1]}" }.
+      name.to_s.split('::').last.
+      gsub(/([A-Z][a-z])/) { |c| "_#{c[0,1].downcase}#{c[1,1]}" }.
       gsub(/([a-z][A-Z])/) { |c| "#{c[0,1]}_#{c[1,1].downcase}" }.
+      gsub(/_+/, '_').
       sub(/^_(input|filter|output)_/, '').downcase
     end
     
