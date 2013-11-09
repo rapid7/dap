@@ -106,9 +106,9 @@ while true
   
   fcount = 1
   filters.each do |f|
-    $stderr.puts "T:  #{" " * (fcount * 2)}#{f.name} -> #{docs.inspect} "
+    $stderr.puts "T:  #{" " * (fcount * 2)}#{f.name} -> #{docs.inspect} " if trace
     docs = docs.collect {|doc| f.process(doc) }.flatten
-    $stderr.puts "T:  #{" " * (fcount * 2)}#{" " * f.name.length} == #{docs.inspect}"
+    $stderr.puts "T:  #{" " * (fcount * 2)}#{" " * f.name.length} == #{docs.inspect}" if trace
     fcount += 1
     break if docs.length == 0
   end
