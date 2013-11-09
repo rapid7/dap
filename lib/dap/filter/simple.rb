@@ -133,6 +133,21 @@ class FilterLineSplit
   end  
 end
 
+class FilterWordSplit
+  include Base
+  def process(doc)
+    lines = [ ]
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        doc[k].to_s.split(/\W/).each do |line|
+          lines << doc.merge({ "#{k}.word" => line })
+        end
+      end
+    end
+   [ lines ]
+  end  
+end
+
 class FilterTrace
   include Base
   def process(doc)
