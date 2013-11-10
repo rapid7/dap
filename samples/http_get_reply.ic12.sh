@@ -1,0 +1,1 @@
+bzcat http_get_reply.ic12.bz2 | ../bin/dap lines + field_split_tab line + rename line.f1=ip line.f4=data + select ip data + transform data=qprintdecode + decode_http_reply data + select ip data.http_code data.http_server + json

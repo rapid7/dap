@@ -9,7 +9,6 @@ require 'dap/proto/addp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
 
-
 #
 # Decode a MDNS Services probe response ( zmap: mdns_5353.pkt )
 #
@@ -126,7 +125,7 @@ end
 class FilterDecodeIPMIChanAuthReply
   include BaseDecoder
   def decode(data)
-    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) rescue nil
+    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
     return unless info
     {
       'ipmi_version' => (info.ipmi_compat_20) == 1 ? "2.0" : "1.5",

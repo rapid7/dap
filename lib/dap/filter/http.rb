@@ -4,13 +4,24 @@ module Filter
 require 'htmlentities'
 
 class FilterHTMLIframes
-  include BaseDecoder
+  include Base
 
-  def extract(doc, field)
+  def process(doc)
+    out = []
+    self.opts.each_pair do |k,v|
+      next unless doc.has_key?(k)
+      extract(doc[k]).each do |url|
+        out << doc.merge({ 'iframe' => url })
+      end
+    end
+   out
+  end
+
+  def extract(data)
     @coder ||= HTMLEntities.new
-    data = doc[field]
     urls = []
-    data.scan(/<iframe[^>]+/n).each do |frame|
+
+    data.scan(/<iframe[^>]+/in).each do |frame|
       if frame =~ /src\s*=\s*['"]?\s*([^\s'">$]+)/n
         url = $1.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '')
         urls << @coder.decode(url).gsub(/[\x00-\x1f]/n, '')
@@ -21,12 +32,11 @@ class FilterHTMLIframes
 end
 
 
-class FilterDecodeHTTPResponse
+class FilterDecodeHTTPReply
   include BaseDecoder
 
   # TODO: Decode transfer-chunked responses
-  def decode(doc, field)
-    data  = doc[field]
+  def decode(data)
     lines = data.split(/\r?\n/)
     resp  = lines.shift
     save  = {}

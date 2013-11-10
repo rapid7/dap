@@ -53,8 +53,9 @@ args  = []
 ARGV.join(' ').split(/\s*\+\s*/).each do |bit|
   
   # Handle quoted arguments as needed
+  # XXX: Doesn't work as expected since ARGV parsing gobbles them up
   aset = Shellwords.shellwords(bit)
-  
+
   # Check the first argument for help or usage flags
   arg  = aset.first
 

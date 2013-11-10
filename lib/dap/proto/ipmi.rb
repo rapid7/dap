@@ -1,5 +1,5 @@
 # -*- coding: binary -*-
-module DAP
+module Dap
 module Proto
 module IPMI
 
