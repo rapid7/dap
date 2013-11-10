@@ -19,5 +19,19 @@ module Base
 
 end
 
+module BaseDecoder
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      next unless doc.has_key?(k)
+      info = decode(doc[k]) || {}
+      info.each_pair do |x,y|
+        doc[ "#{k}.#{x}" ] = y
+      end
+    end
+   [ doc ]
+  end
+end
+
 end
 end
