@@ -73,6 +73,18 @@ class FilterExclude
   end
 end
 
+class FilterExists
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        return [ doc ]
+      end
+    end
+    [ ]
+  end
+end
+
 class FilterTransform
   include Base
   def process(doc)

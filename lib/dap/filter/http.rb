@@ -2,6 +2,8 @@ module Dap
 module Filter
 
 require 'htmlentities'
+require 'nokogiri'
+require 'uri'
 
 class FilterHTMLIframes
   include Base
@@ -21,13 +23,70 @@ class FilterHTMLIframes
     @coder ||= HTMLEntities.new
     urls = []
 
-    data.scan(/<iframe[^>]+/in).each do |frame|
-      if frame =~ /src\s*=\s*['"]?\s*([^\s'">$]+)/n
-        url = $1.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '')
-        urls << @coder.decode(url).gsub(/[\x00-\x1f]/n, '')
+    data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
+    html = Nokogiri::HTML(data) do |conf|
+      conf.strict.noent
+    end
+
+    html.xpath('//iframe').each do |e|
+      url = e['src']
+      next unless url
+      urls << url
+    end
+
+    urls
+  end
+end
+
+
+class FilterHTMLLinks
+  include Base
+
+  def process(doc)
+    out = []
+    self.opts.each_pair do |k,v|
+      next unless doc.has_key?(k)
+      extract(doc[k]).each do |link_info|
+        out << doc.merge(link_info)
       end
     end
+   out
+  end
+
+  def extract(data)
+    urls = []
+
+    data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
+    html = Nokogiri::HTML(data) do |conf|
+      conf.strict.noent
+    end
+
+    html.xpath('//*').each do |e|
+      url = e['href'] || e['src']
+      next unless url
+      urls << { 'link' => url, 'element' => e.name }
+    end
+
     urls
+  end
+end
+
+class FilterDecodeURI
+  include BaseDecoder
+  def decode(data)
+    save = {}
+    uri  = URI.parse(data) rescue nil
+    return unless uri
+
+    save["host"] = uri.host if uri.host
+    save["port"] = uri.port.to_s if uri.port
+    save["path"] = uri.path if uri.path
+    save["query"]  = uri.query if uri.query
+    save["scheme"] = uri.scheme if uri.scheme
+    save["user"] = uri.user if uri.user
+    save["password"] = uri.password if uri.password
+
+    save
   end
 end
 
