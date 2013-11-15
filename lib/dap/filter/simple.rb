@@ -35,7 +35,7 @@ class FilterSelect
         ndoc[k] = doc[k]
       end
     end
-   [ ndoc ]
+   (ndoc.keys.length == 0) ? [] : [ ndoc ]
   end
 end
 
@@ -77,7 +77,7 @@ class FilterExists
   include Base
   def process(doc)
     self.opts.each_pair do |k,v|
-      if doc.has_key?(k)
+      if doc.has_key?(k) and doc[k].to_s.length > 0
         return [ doc ]
       end
     end
@@ -175,6 +175,37 @@ class FilterSplitTab
   end  
 end
 
+
+class FilterSplitComma
+  include Base
+  def process(doc)
+    lines = [ ]
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        doc[k].to_s.split(/m/).each do |line|
+          lines << doc.merge({ "#{k}.word" => line })
+        end
+      end
+    end
+   lines.length == 0 ? [ doc ] : [ lines ]
+  end  
+end
+
+class FilterSplitArray
+  include Base
+  def process(doc)
+    lines = [ ]
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k) and doc[k].respond_to?(:each)
+        doc[k].each do |line|
+          lines << doc.merge({ "#{k}.item" => line })
+        end
+      end
+    end
+   lines.length == 0 ? [ doc ] : [ lines ]
+  end  
+end
+
 class FilterFieldSplitLine
   include Base
   def process(doc)
@@ -223,6 +254,37 @@ class FilterFieldSplitTab
   end
 end
 
+class FilterFieldSplitComma
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        wcount = 1
+        doc[k].to_s.split(/,/).each do |word|
+          doc.merge!({ "#{k}.f#{wcount}" => word })
+          wcount += 1
+        end
+      end
+    end
+   [ doc ]
+  end
+end
+
+class FilterFieldSplitArray
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k) and doc[k].respond_to?(:each)
+        wcount = 1
+        doc[k].each do |word|
+          doc.merge!({ "#{k}.f#{wcount}" => word })
+          wcount += 1
+        end
+      end
+    end
+   [ doc ]
+  end
+end
 
 end
 end

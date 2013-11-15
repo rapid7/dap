@@ -1,0 +1,1 @@
+bzcat ssl_certs.bz2 | ../bin/dap json + field_split_array certs + transform certs.f1=base64decode + remove certs + decode_x509 certs.f1 + select certs.f1.names + exists certs.f1.names + split_array certs.f1.names + select certs.f1.names.item + exists certs.f1.names.item + lines
