@@ -69,3 +69,5 @@ module Input
 
 end
 end
+
+require 'dap/input/warc'
