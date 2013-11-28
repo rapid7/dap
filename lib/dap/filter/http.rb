@@ -124,11 +124,11 @@ class FilterDecodeHTTPReply
 
       when /^Date:\s*(.*)/i
         d = DateTime.parse($1.strip) rescue nil
-        save["http_date"] = d if d
+        save["http_date"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
           
       when /^Last-modified:\s*(.*)/i
         d = DateTime.parse($1.strip) rescue nil
-        save["http_modified"] = d if d
+        save["http_modified"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
 
       when /^Location:\s*(.*)/i
         save["http_location"] = $1.strip  
