@@ -144,8 +144,11 @@ class FilterDecodeHTTPReply
       end
     end
 
-    hidx = data.index(/\r?\n\r?\n/) || 0
-    body = data[hidx, data.length-hidx]
+    head, body = data.split(/\r?\n\r?\n/, 2)
+    
+    # Some buggy systems exclude the header entirely
+    body ||= head
+
     save["http_body"] = body
 
     if body =~ /<title>([^>]+)</min
