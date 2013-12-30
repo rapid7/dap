@@ -24,8 +24,13 @@ class FilterHTMLIframes
     urls = []
 
     data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-    html = Nokogiri::HTML(data) do |conf|
-      conf.strict.noent
+    html = nil
+    begin
+      html = Nokogiri::HTML(data) do |conf|
+        conf.strict.noent
+      end
+    rescue ::Exception
+      return urls
     end
 
     html.xpath('//iframe').each do |e|
@@ -57,8 +62,13 @@ class FilterHTMLLinks
     urls = []
 
     data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-    html = Nokogiri::HTML(data) do |conf|
-      conf.strict.noent
+    html = nil
+    begin
+      html = Nokogiri::HTML(data) do |conf|
+        conf.strict.noent
+      end
+    rescue ::Exception
+     return urls
     end
 
     html.xpath('//*').each do |e|
