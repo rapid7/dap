@@ -71,3 +71,4 @@ end
 end
 
 require 'dap/input/warc'
+require 'dap/input/csv'
