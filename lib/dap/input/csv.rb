@@ -10,8 +10,24 @@ module Input
 
     include FileSource
 
+    attr_accessor :has_header, :headers
+
     def initialize(args)
-      self.open(args.first)
+      self.headers = []
+
+      fname = args.shift
+      self.open(fname)
+
+      args.each do |arg|
+        if arg =~ /^header=(.*)/
+          val =$1
+          self.has_header = !! (val =~ /^y|t|1/i)
+        end
+      end
+
+      if self.has_header
+        self.headers = read_record.values.map{|x| x.to_s.strip }
+      end
     end
 
     def read_record
@@ -24,7 +40,7 @@ module Input
       arr.first.each do |x|
         cnt += 1
         if x.to_s.length > 0
-          res[cnt.to_s] = x
+          res[headers[cnt-1] || cnt.to_s] = x
         end
       end
       res
