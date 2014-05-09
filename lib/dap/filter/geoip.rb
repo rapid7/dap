@@ -20,7 +20,14 @@ class FilterGeoIP
     return unless @@geo_lookup
     geo_hash = @@geo_lookup.look_up(ip)
     return unless geo_hash
-    geo_hash
+    ret = {}
+
+    geo_hash.each_pair do |k,v|
+      next unless k
+      ret[k.to_s] = v.to_s
+    end
+    
+    ret
   end
 end
 
