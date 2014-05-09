@@ -19,19 +19,22 @@ module Dap
 
     class FilterGeoip
       include Base
+
       def process(doc)
         if $geo_lookup
-          geo_data = {}
           self.opts.each_pair do |k,v|
             if doc.has_key?(k)
+              # If a name is given use it, otherwise default to geo
+              name = v || 'geo'
               geo_hash = $geo_lookup.look_up( doc[k] )
-              geo_data['c']    = geo_hash[:country_code]
-              geo_data['city'] = geo_hash[:city]
-              geo_data['reg']  = geo_hash[:region]
-              geo_data['loc']  = [ geo_hash[:latitude], geo_hash[:longitude]]
+              doc[name] = {
+                  'c'    => geo_hash[:country_code],
+                  'city' => geo_hash[:city],
+                  'reg'  => geo_hash[:region],
+                  'loc'  => [ geo_hash[:latitude], geo_hash[:longitude]]
+              } if geo_hash
             end
           end
-          doc['geo'] = geo_data
         end
         [doc]
       end
