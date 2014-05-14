@@ -127,10 +127,12 @@ class FilterDecodeIPMIChanAuthReply
   def decode(data)
     info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
     return unless info
-    {
-      'ipmi_version' => (info.ipmi_compat_20) == 1 ? "2.0" : "1.5",
-      'ipmi_summary' => info.to_banner
-    }
+    {}.tap do |h|
+      info.fields.each do |f|
+        name = f.name
+        h[name] = info.send(name).to_s
+      end
+    end
   end
 end
 
