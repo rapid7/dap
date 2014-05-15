@@ -198,8 +198,9 @@ class FilterDecodeMSSQLReply
   include BaseDecoder
   def decode(data)
     info = {}
-    data.scan(/(.+?);(.+?);/).each do | var, val|
-      info["mssql.#{var}"] = val
+    # Some binary characters often proceed key, restrict to alphanumeric and a few other common chars
+    data.scan(/([A-Za-z0-9 \.\-_]+?);(.+?);/).each do | var, val|
+      info["mssql.#{var.force_encoding('BINARY')}"] = val.force_encoding('BINARY')
     end
     info
   end
