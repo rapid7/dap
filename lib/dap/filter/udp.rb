@@ -198,14 +198,9 @@ class FilterDecodeMSSQLReply
   include BaseDecoder
   def decode(data)
     info = {}
-
-    info['mssql_server_name']   = $1   if /ServerName;([A-Za-z0-9 ]+);/   =~ data
-    info['mssql_instance_name'] = $1   if /InstanceName;([A-Za-z0-9 ]+);/ =~ data
-    info['mssql_is_clustered']  = $1   if /IsClustered;([A-Za-z0-9 ]+);/  =~ data
-    info['mssql_version']       = $1   if /Version;([A-Za-z0-9 .]+);/     =~ data
-    info['mssql_tcp_port']      = $1   if /tcp;([A-Za-z0-9 .]+);/         =~ data
-    info['mssql_named_pipe']    = $1   if /np;(.+?);/                     =~ data
-
+    data.scan(/(.+?);(.+?);/).each do | var, val|
+      info["mssql.#{var}"] = val
+    end
     info
   end
 end
