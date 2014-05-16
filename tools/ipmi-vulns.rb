@@ -10,13 +10,11 @@ SEARCHES = {
 }
 
 def search(hash)
-  vulns = []
   SEARCHES.each do | key, vuln |
     if hash[key] == vuln[:value]
-      vulns << "VULN-IPMI-#{vuln[:name].upcase}"
+      hash["VULN-IPMI-#{vuln[:name].upcase}"] = "true"
     end
   end
-  hash['vulnerabilities'] = vulns unless vulns.empty?
   hash
 end
 
