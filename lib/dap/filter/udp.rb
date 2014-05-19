@@ -126,17 +126,13 @@ class FilterDecodeIPMIChanAuthReply
   include BaseDecoder
   def decode(data)
     info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
-    return unless valid?(info)
+    return unless info.valid?
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
         h[name] = info.send(name).to_s
       end
     end
-  end
-
-  def valid?(info)
-    info && (info.rmcp_version == 6) && (info.message_length == 16)
   end
 end
 
