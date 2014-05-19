@@ -3,9 +3,9 @@ require 'optparse'
 
 options = Hash.new(0)
 OptionParser.new do |opts|
-  opts.banner = "Usage: example.rb [options]"
+  opts.banner = "Usage: netbios-counts.rb [options]"
 
-  opts.on("-c", "--count [INT]", OptionParser::DecimalInteger, 
+  opts.on("-c", "--count [NUM]", OptionParser::DecimalInteger, 
           "Specify the number of top results") do |count|
     options[:top_count] = count
   end
