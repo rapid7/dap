@@ -9,6 +9,8 @@ require 'dap/proto/addp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
 
+require_relative '../../rex/mac_oui'
+
 #
 # Decode a MDNS Services probe response ( zmap: mdns_5353.pkt )
 #
@@ -126,17 +128,13 @@ class FilterDecodeIPMIChanAuthReply
   include BaseDecoder
   def decode(data)
     info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
-    return unless valid?(info)
+    return unless info.valid?
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
         h[name] = info.send(name).to_s
       end
     end
-  end
-
-  def valid?(info)
-    info && (info.rmcp_version == 6) && (info.message_length == 16)
   end
 end
 
@@ -192,7 +190,28 @@ class FilterDecodeNetbiosStatusReply
 
     return unless names.length > 0
 
-    { 'netbios_names' => (inf), 'netbios_mac' => maddr, 'netbios_hname' => names[0][0] }
+    { 'netbios_names'            => (inf), 
+      'netbios_mac'              => maddr, 
+      'netbios_hname'            => names[0][0],
+      'netbios_mac_company'      => mac_company(maddr),
+      'netbios_mac_company_name' => mac_company_name(maddr) }
+  end
+
+  def mac_company(address)
+    begin
+      name = Rex::Oui.lookup_oui_fullname(address)
+      name.split("/").first.strip
+    rescue => error
+      ''
+    end
+  end
+
+  def mac_company_name(address)
+    begin
+      Rex::Oui.lookup_oui_company_name(address)
+    rescue => error
+      ''
+    end
   end
 end
 #
