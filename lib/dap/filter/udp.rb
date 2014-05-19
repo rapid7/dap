@@ -9,6 +9,8 @@ require 'dap/proto/addp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
 
+require_relative '../../rex/mac_oui'
+
 #
 # Decode a MDNS Services probe response ( zmap: mdns_5353.pkt )
 #
@@ -188,7 +190,28 @@ class FilterDecodeNetbiosStatusReply
 
     return unless names.length > 0
 
-    { 'netbios_names' => (inf), 'netbios_mac' => maddr, 'netbios_hname' => names[0][0] }
+    { 'netbios_names'            => (inf), 
+      'netbios_mac'              => maddr, 
+      'netbios_hname'            => names[0][0],
+      'netbios_mac_company'      => mac_company(maddr),
+      'netbios_mac_company_name' => mac_company_name(maddr) }
+  end
+
+  def mac_company(address)
+    begin
+      name = Rex::Oui.lookup_oui_fullname(address)
+      name.split("/").first.strip
+    rescue => error
+      ''
+    end
+  end
+
+  def mac_company_name(address)
+    begin
+      Rex::Oui.lookup_oui_company_name(address)
+    rescue => error
+      ''
+    end
   end
 end
 #
