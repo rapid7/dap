@@ -190,11 +190,15 @@ class FilterDecodeNetbiosStatusReply
 
     return unless names.length > 0
 
-    { 'netbios_names'            => (inf), 
-      'netbios_mac'              => maddr, 
-      'netbios_hname'            => names[0][0],
-      'netbios_mac_company'      => mac_company(maddr),
-      'netbios_mac_company_name' => mac_company_name(maddr) }
+    {}.tap do |hash|
+      hash['netbios_names'] = (inf), 
+      hash['netbios_mac']   = maddr, 
+      hash['netbios_hname'] = names[0][0],
+      unless maddr == '00:00:00:00:00:00' 
+        hash['netbios_mac_company']      = mac_company(maddr),
+        hash['netbios_mac_company_name'] = mac_company_name(maddr) 
+      end
+    end
   end
 
   def mac_company(address)
