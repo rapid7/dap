@@ -1,6 +1,7 @@
 require 'optparse'
 require 'ostruct'
 require 'oj'
+require 'json'
 
 options = OpenStruct.new
 options.top_count = 5
@@ -217,4 +218,4 @@ end
 summary = {}
 counters.each { |counter| counter.apply_to(summary) }
 
-puts Oj.dump(summary)
+puts JSON.pretty_generate(summary)
