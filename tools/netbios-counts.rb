@@ -67,11 +67,11 @@ class NetbiosNameCounter
   end
 
   def count_hash(values)
-    { 'name' => values[0], 'count' => values[1] }
+    { 'hostname' => values[0], 'count' => values[1] }
   end
 
   def apply_to(hash)
-    hash['top_netbios_names'] = top_counts
+    hash['top_netbios_hostnames'] = top_counts
   end
 end
 
@@ -83,9 +83,10 @@ class MacAddressCounter
   end
 
   def countable_value(hash)
+    address = hash['data.netbios_mac'].to_s
     [].tap do |data|
-      unless hash['data.netbios_mac'].nil?
-        data << hash['data.netbios_mac']
+      unless (address.empty? || address == '00:00:00:00:00:00')
+        data << address
         data << hash['data.netbios_hname']
         data << hash['data.netbios_mac_company']
       end
@@ -95,7 +96,7 @@ class MacAddressCounter
   def count_hash(values)
     { 
       'mac_address' => values[0][0], 
-      'name'        => values[0][1],
+      'hostname'    => values[0][1],
       'company'     => values[0][2],
       'count'       => values[1] 
     }
@@ -110,14 +111,18 @@ class GeoCounter
   def initialize
     @cities    = Hash.new(0)
     @countries = Hash.new(0)
+    @regions   = Hash.new(0)
   end
 
   def count(hash)
     city         = hash['ip.city'].to_s
     country_code = hash['ip.country_code'].to_s
+    region       = hash['ip.region'].to_s
+    region_name  = hash['ip.region_name'].to_s
 
     @cities[[city, country_code]] += 1 unless city.empty?
     @countries[country_code] += 1 unless country_code.empty?
+    @regions[[region, region_name]] += 1 unless region.empty?
   end
   
   def top_cities
@@ -125,7 +130,7 @@ class GeoCounter
       ordered_cities.to_a.take(NUM_TOP_RECORDS).each do |values|
         counts << { 
           'city'    => values[0][0], 
-          'country' => values[0][1], 
+          'country_code' => values[0][1], 
           'count'   => values[1] 
         }
       end
@@ -135,7 +140,19 @@ class GeoCounter
   def top_countries
     [].tap do |counts|
       ordered_countries.to_a.take(NUM_TOP_RECORDS).each do |values|
-        counts << { 'country' => values[0], 'count' => values[1] }
+        counts << { 'country_code' => values[0], 'count' => values[1] }
+      end
+    end
+  end
+
+  def top_regions
+    [].tap do |counts|
+      ordered_regions.to_a.take(NUM_TOP_RECORDS).each do |values|
+        counts << { 
+          'region'      => values[0][0], 
+          'region_name' => values[0][1], 
+          'count'       => values[1] 
+        }
       end
     end
   end
@@ -148,9 +165,39 @@ class GeoCounter
     Hash[@countries.sort_by{|k, v| v}.reverse] 
   end
 
+  def ordered_regions
+    Hash[@regions.sort_by{|k, v| v}.reverse] 
+  end
+
   def apply_to(hash)
     hash['top_cities']    = top_cities unless top_cities.empty?
     hash['top_countries'] = top_countries unless top_countries.empty?
+    hash['top_regions']   = top_regions unless top_regions.empty?
+  end
+end
+
+class SambaCounter
+  include Counter
+
+  def initialize
+    @counts = Hash.new(0)
+  end
+
+  def countable_value(hash)
+    address = hash['data.netbios_mac'].to_s
+    if (address == '00:00:00:00:00:00')
+      hash['data.netbios_hname']
+    else
+      ''
+    end
+  end
+
+  def count_hash(values)
+    { 'name'  => values[0], 'count' => values[1] }
+  end
+
+  def apply_to(hash)
+    hash['top_samba_names'] = top_counts
   end
 end
 
@@ -158,7 +205,8 @@ counters = [
   CompanyNameCounter.new, 
   NetbiosNameCounter.new,
   MacAddressCounter.new,
-  GeoCounter.new
+  GeoCounter.new,
+  SambaCounter.new
 ]
 
 while line=gets
