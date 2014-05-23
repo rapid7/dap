@@ -27,7 +27,7 @@ module Input
 
       if self.has_header
         data = read_record
-        unless data == :eof
+        unless (data == :eof or data == :empty)
           self.headers = data.values.map{|x| x.to_s.strip }
         end
       end
