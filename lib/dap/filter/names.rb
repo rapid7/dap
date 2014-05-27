@@ -111,9 +111,9 @@ class FilterSplitNonDynamicDomains
 
   def expand(data)
     names = []
-    data  = data.
+    data  = data.unpack("C*").pack("C*").
       gsub(/.*ip\d+\.ip\d+\.ip\d+\.ip\d+\./, '').
-      gsub(/.*\d+[\_\-\.x]\d+[\_\-\.x]\d+[\_\-\.x]\d+[\_\-\.x]/, '').
+      gsub(/.*\d+[\_\-\.x]\d+[\_\-\.x]\d+[\_\-\.x]\d+[^\.]+/, '').
       gsub(/.*node-[a-z0-9]+.*pool.*dynamic\./, '').
       gsub(/.*[a-z][a-z]\d+\.[a-z]as[a-z0-9]+\./, '').
       # cl223.001033200.technowave.ne.jp
@@ -131,7 +131,9 @@ class FilterSplitNonDynamicDomains
       gsub(/.*\d+\-\d+\-\d+\.dsl/, 'dsl').
       gsub(/.*pool\./, '').
       gsub(/.*dynamic\./, '').
+      gsub(/.*static\./, '').
       gsub(/.*dhcp[^\.]+\./, '').
+      gsub(/^\d{6,100}\./, '').
       gsub(/^\.+/, '')
 
     bits  = data.split('.')
