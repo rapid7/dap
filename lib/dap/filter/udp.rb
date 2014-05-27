@@ -233,6 +233,31 @@ class FilterDecodeMSSQLReply
   end
 end
 
+#
+# Decode a SIP OPTIONS
+#
+class FilterDecodeSIPOptionsReply
+  include BaseDecoder
+  def decode(data)
+    info = {}
+    data.split(/\r?\n/).each do |line|
+      case line
+      when /^SIP\/(\d+\.\d+) (\d+)(.*)/
+        info['sip_version'] = $1
+        info['sip_code']    = $2
+        if $3.length > 0
+          info['sip_message'] = $3.strip
+        end
+      when /^([a-zA-z0-9][^:]+):(.*)/
+        var = $1.strip
+        val = $2.strip
+        var = var.downcase.gsub(/[^a-zA-Z0-9_]/, '_').gsub(/_+/, '_')
+        info["sip_#{var}"] = val
+      end
+    end
+    info
+  end
+end
 
 end
 end
