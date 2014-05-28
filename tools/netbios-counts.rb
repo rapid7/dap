@@ -7,13 +7,22 @@ require 'json'
 
 options = OpenStruct.new
 options.top_count = 5
+options.exclude_default_counts = false
 
 OptionParser.new do |opts|
   opts.banner = "Usage: netbios-counts.rb [options]"
 
   opts.on("-c", "--count [NUM]", OptionParser::DecimalInteger, 
-          "Specify the number of top results") do |count|
+          "Specify the number of top count results") do |count|
     options.top_count = count if count > 1
+  end
+
+  opts.on("--count-hostnames-containing [TEXT]", "Count hostnames that include the speified text") do |text|
+    options.hostname_containing = text
+  end 
+
+  opts.on("--exclude-default-counts", "Exclude the provided top counts") do
+    options.exclude_default_counts = true
   end
 end.parse!
 
@@ -204,13 +213,52 @@ class SambaCounter
   end
 end
 
-counters = [ 
-  CompanyNameCounter.new, 
-  NetbiosNameCounter.new,
-  MacAddressCounter.new,
-  GeoCounter.new,
-  SambaCounter.new
-]
+class HostnameContainingCounter
+  include Counter
+
+  def initialize(text)
+    @text = text
+    @counts = Hash.new(0)
+  end
+
+  def countable_value(hash)
+    hostname = hash['data.netbios_hname'].to_s
+    [].tap do |data|
+      if hostname.include?(@text)
+        data << hostname
+        data << hash['data.netbios_mac_company']
+        data << hash['ip.city'].to_s
+        data << hash['ip.country_code'].to_s
+        data << hash['ip.country_name'].to_s
+      end
+    end
+  end
+
+  def count_hash(values)
+    { 
+      'hostname'     => values[0][0],
+      'company'      => values[0][1],
+      'city'         => values[0][2],
+      'country_code' => values[0][3],
+      'country_name' => values[0][4],
+      'count'        => values[1] 
+    }
+  end
+
+  def apply_to(hash)
+    hash["hostnames with '#{@text}'"] = top_counts
+  end
+end
+
+counters = []
+unless options.exclude_default_counts
+  counters << CompanyNameCounter.new 
+  counters << NetbiosNameCounter.new
+  counters << MacAddressCounter.new
+  counters << GeoCounter.new
+  counters << SambaCounter.new
+end
+counters << HostnameContainingCounter.new(options.hostname_containing) unless options.hostname_containing.nil?
 
 while line=gets
   hash = Oj.load(line.strip)
