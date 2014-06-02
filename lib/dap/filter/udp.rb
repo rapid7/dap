@@ -234,7 +234,7 @@ class FilterDecodeMSSQLReply
 end
 
 #
-# Decode a SIP OPTIONS
+# Decode a SIP OPTIONS Reply
 #
 class FilterDecodeSIPOptionsReply
   include BaseDecoder
@@ -255,6 +255,52 @@ class FilterDecodeSIPOptionsReply
         info["sip_#{var}"] = val
       end
     end
+    info
+  end
+end
+
+#
+# Decode a NTP monlist Reply
+#
+class FilterDecodeNTPMonlistReply
+  include BaseDecoder
+  def decode(sdata)
+    info = {}
+    return if sdata.length < (72 + 16)
+
+    # Make a copy since our parser is destructive
+    data = sdata.dup
+
+    # NTP headers 8 bytes
+    ntp_flags, ntp_auth, ntp_vers, ntp_code = data.slice!(0,4).unpack('C*')
+
+    info['ntp_auth'] = ntp_auth.to_s
+    info['ntp_version'] = ntp_vers.to_s
+    info['ntp_code'] = ntp_code.to_s
+
+    pcnt, plen = data.slice!(0,4).unpack('nn')
+    return if plen != 72
+
+    hosts = []
+    idx = 0
+    1.upto(pcnt) do
+
+      #u_int32 firsttime; /* first time we received a packet */
+      #u_int32 lasttime;  /* last packet from this host */
+      #u_int32 restr;     /* restrict bits (was named lastdrop) */
+      #u_int32 count;     /* count of packets received */
+      #u_int32 addr;      /* host address V4 style */
+      #u_int32 daddr;     /* destination host address */
+      #u_int32 flags;     /* flags about destination */
+      #u_short port;      /* port number of last reception */
+
+      firsttime,lasttime,restr,count,saddr,daddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+      hosts << [saddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      idx += plen
+    end
+
+    info['ntp_hosts'] = hosts.join(' ')
+    info['ntp_hostcount'] = hosts.length.to_s
     info
   end
 end
