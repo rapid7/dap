@@ -52,6 +52,10 @@ class Channel_Auth_Reply < BitStruct
   rest :ipm_oem_data, "IPMI OEM Data + Checksum Byte"
 
 
+  def valid?
+    (rmcp_version == 6) && (message_length == 16)
+  end
+
   def to_banner
     info   = self
     banner = "#{(info.ipmi_compat_20 == 1) ? "IPMI-2.0" : "IPMI-1.5"} "

@@ -26,7 +26,10 @@ module Input
       end
 
       if self.has_header
-        self.headers = read_record.values.map{|x| x.to_s.strip }
+        data = read_record
+        unless (data == :eof or data == :empty)
+          self.headers = data.values.map{|x| x.to_s.strip }
+        end
       end
     end
 
@@ -34,7 +37,12 @@ module Input
       res = {}
       line = self.fd.readline rescue nil
       return Error::EOF unless line
-      arr = CSV.parse(line) rescue nil
+
+      # Short-circuit the slow CSV parser if the data does not contain double quotes
+      arr = line.index('"') ? 
+        ( CSV.parse(line) rescue nil ) : 
+        [ line.split(',').map{|x| x.strip } ]
+
       return Error::Empty unless arr
       cnt = 0
       arr.first.each do |x|

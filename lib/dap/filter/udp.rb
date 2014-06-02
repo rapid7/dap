@@ -6,8 +6,11 @@ require 'net/dns'
 require 'bit-struct'
 
 require 'dap/proto/addp'
+require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
+
+require_relative '../../rex/mac_oui'
 
 #
 # Decode a MDNS Services probe response ( zmap: mdns_5353.pkt )
@@ -56,7 +59,7 @@ end
 class FilterDecodeUPNP_SSDP_Reply
   include BaseDecoder
   def decode(data)
-    head = { }  
+    head = { }
     data.split(/\n/).each do |line|
       k,v = line.strip.split(':', 2)
       next if not k
@@ -125,8 +128,24 @@ end
 class FilterDecodeIPMIChanAuthReply
   include BaseDecoder
   def decode(data)
-    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
-    return unless info
+    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data)
+    return unless info.valid?
+    {}.tap do |h|
+      info.fields.each do |f|
+        name = f.name
+        h[name] = info.send(name).to_s
+      end
+    end
+  end
+end
+
+#
+# Decode a NAT-PMP External Address response
+#
+class FilterDecodeNATPMPExternalAddressResponse
+  include BaseDecoder
+  def decode(data)
+    return unless info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
@@ -188,7 +207,32 @@ class FilterDecodeNetbiosStatusReply
 
     return unless names.length > 0
 
-    { 'netbios_names' => (inf), 'netbios_mac' => maddr, 'netbios_hname' => names[0][0] }
+    {}.tap do |hash|
+      hash['netbios_names'] = (inf)
+      hash['netbios_mac']   = maddr
+      hash['netbios_hname'] = names[0][0]
+      unless maddr == '00:00:00:00:00:00'
+        hash['netbios_mac_company']      = mac_company(maddr)
+        hash['netbios_mac_company_name'] = mac_company_name(maddr)
+      end
+    end
+  end
+
+  def mac_company(address)
+    begin
+      name = Rex::Oui.lookup_oui_fullname(address)
+      name.split("/").first.strip
+    rescue => error
+      ''
+    end
+  end
+
+  def mac_company_name(address)
+    begin
+      Rex::Oui.lookup_oui_company_name(address)
+    rescue => error
+      ''
+    end
   end
 end
 #
@@ -206,6 +250,77 @@ class FilterDecodeMSSQLReply
   end
 end
 
+#
+# Decode a SIP OPTIONS Reply
+#
+class FilterDecodeSIPOptionsReply
+  include BaseDecoder
+  def decode(data)
+    info = {}
+    data.split(/\r?\n/).each do |line|
+      case line
+      when /^SIP\/(\d+\.\d+) (\d+)(.*)/
+        info['sip_version'] = $1
+        info['sip_code']    = $2
+        if $3.length > 0
+          info['sip_message'] = $3.strip
+        end
+      when /^([a-zA-z0-9][^:]+):(.*)/
+        var = $1.strip
+        val = $2.strip
+        var = var.downcase.gsub(/[^a-zA-Z0-9_]/, '_').gsub(/_+/, '_')
+        info["sip_#{var}"] = val
+      end
+    end
+    info
+  end
+end
+
+#
+# Decode a NTP monlist Reply
+#
+class FilterDecodeNTPMonlistReply
+  include BaseDecoder
+  def decode(sdata)
+    info = {}
+    return if sdata.length < (72 + 16)
+
+    # Make a copy since our parser is destructive
+    data = sdata.dup
+
+    # NTP headers 8 bytes
+    ntp_flags, ntp_auth, ntp_vers, ntp_code = data.slice!(0,4).unpack('C*')
+
+    info['ntp_auth'] = ntp_auth.to_s
+    info['ntp_version'] = ntp_vers.to_s
+    info['ntp_code'] = ntp_code.to_s
+
+    pcnt, plen = data.slice!(0,4).unpack('nn')
+    return if plen != 72
+
+    hosts = []
+    idx = 0
+    1.upto(pcnt) do
+
+      #u_int32 firsttime; /* first time we received a packet */
+      #u_int32 lasttime;  /* last packet from this host */
+      #u_int32 restr;     /* restrict bits (was named lastdrop) */
+      #u_int32 count;     /* count of packets received */
+      #u_int32 addr;      /* host address V4 style */
+      #u_int32 daddr;     /* destination host address */
+      #u_int32 flags;     /* flags about destination */
+      #u_short port;      /* port number of last reception */
+
+      firsttime,lasttime,restr,count,saddr,daddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+      hosts << [saddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      idx += plen
+    end
+
+    info['ntp_hosts'] = hosts.join(' ')
+    info['ntp_hostcount'] = hosts.length.to_s
+    info
+  end
+end
 
 end
 end

@@ -1,3 +1,6 @@
 # Ignore rvm files
 .ruby-version
 .ruby-gemset
+
+# Ignore geoip data file
+data/geoip.dat
