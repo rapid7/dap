@@ -20,6 +20,11 @@ class ExternalAddressResponse < BitStruct
   unsigned :epoch, 32, 'Time elapsed since port mapping table was initialized or reset'
   octets :external_ip, 32, 'External IPv4 address'
   rest :body, 'Payload' # general empty
+
+  def valid?
+    # only responses with exactly 12 bytes are valid
+    length == 12
+  end
 end
 end
 end
