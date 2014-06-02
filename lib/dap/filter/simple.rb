@@ -103,6 +103,30 @@ class FilterExists
   end
 end
 
+# Applies some simple annotation to the given fields, adding another
+# field name with the appended annotation type, i.e.:
+#
+# $  echo '{"foo":"blah"}' | dap json stdin + annotate foo=length +  json
+# {"foo":"bar","foo.length":4}
+class FilterAnnotate
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        case v
+        when 'length'
+          doc["#{k}.length"] = doc[k].length
+        when 'size'
+          doc["#{k}.size"] = doc[k].size
+        else
+          fail "Unsupported annotation '#{v}'"
+        end
+      end
+    end
+    [ doc ]
+  end
+end
+
 class FilterTransform
   include Base
   def process(doc)
