@@ -61,6 +61,24 @@ class FilterInclude
   end
 end
 
+# where 'some.field == some_value'
+# where 'some.field != some_value'
+# TODO: do something other than basic string comparison.  Would be nice to have where 'some.field > 2', etc
+class FilterWhere
+  attr_accessor :query
+
+  def initialize(args)
+    fail "Expected 3 arguments to 'where' but got #{args.size}" unless args.size == 3
+    self.query = args
+  end
+
+  def process(doc)
+    field, operator, expected = self.query
+    return [ doc ] if doc.has_key?(field) and doc[field].send(operator, expected)
+    [ ]
+  end
+end
+
 class FilterExclude
   include Base
   def process(doc)
@@ -85,6 +103,30 @@ class FilterExists
   end
 end
 
+# Applies some simple annotation to the given fields, adding another
+# field name with the appended annotation type, i.e.:
+#
+# $  echo '{"foo":"blah"}' | dap json stdin + annotate foo=length +  json
+# {"foo":"bar","foo.length":4}
+class FilterAnnotate
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        case v
+        when 'length'
+          doc["#{k}.length"] = doc[k].length
+        when 'size'
+          doc["#{k}.size"] = doc[k].size
+        else
+          fail "Unsupported annotation '#{v}'"
+        end
+      end
+    end
+    [ doc ]
+  end
+end
+
 class FilterTransform
   include Base
   def process(doc)
@@ -100,7 +142,7 @@ class FilterTransform
         when 'utf8encode'
           doc[k] = doc[k].to_s.encode!('UTF-8', invalid: :replace, undef: :replace, replace: '')
         when 'base64decode'
-          doc[k] = doc[k].to_s.unpack('m*').first        
+          doc[k] = doc[k].to_s.unpack('m*').first
         when 'base64encode'
           doc[k] = [doc[k].to_s].pack('m*').gsub(/\s+/n, '')
         when 'qprintdecode'
@@ -110,7 +152,7 @@ class FilterTransform
         when 'hexdecode'
           doc[k] = [ doc[k].to_s ].pack("H*")
         when 'hexencode'
-          doc[k] = doc[k].to_s.unpack("H*").first      
+          doc[k] = doc[k].to_s.unpack("H*").first
         end
       end
     end
@@ -142,7 +184,7 @@ class FilterSplitLine
       end
     end
    lines.length == 0 ? [ doc ] : [ lines ]
-  end  
+  end
 end
 
 class FilterSplitWord
@@ -157,7 +199,7 @@ class FilterSplitWord
       end
     end
    lines.length == 0 ? [ doc ] : [ lines ]
-  end  
+  end
 end
 
 class FilterSplitTab
@@ -172,7 +214,7 @@ class FilterSplitTab
       end
     end
    lines.length == 0 ? [ doc ] : [ lines ]
-  end  
+  end
 end
 
 
@@ -188,7 +230,7 @@ class FilterSplitComma
       end
     end
    lines.length == 0 ? [ doc ] : [ lines ]
-  end  
+  end
 end
 
 class FilterSplitArray
@@ -203,7 +245,7 @@ class FilterSplitArray
       end
     end
    lines.length == 0 ? [ doc ] : [ lines ]
-  end  
+  end
 end
 
 class FilterFieldSplitLine
@@ -219,7 +261,7 @@ class FilterFieldSplitLine
       end
     end
    [ doc ]
-  end  
+  end
 end
 
 class FilterFieldSplitWord
@@ -235,7 +277,7 @@ class FilterFieldSplitWord
       end
     end
    [ doc ]
-  end  
+  end
 end
 
 class FilterFieldSplitTab

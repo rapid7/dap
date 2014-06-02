@@ -6,6 +6,7 @@ require 'net/dns'
 require 'bit-struct'
 
 require 'dap/proto/addp'
+require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
 
@@ -58,7 +59,7 @@ end
 class FilterDecodeUPNP_SSDP_Reply
   include BaseDecoder
   def decode(data)
-    head = { }  
+    head = { }
     data.split(/\n/).each do |line|
       k,v = line.strip.split(':', 2)
       next if not k
@@ -127,8 +128,24 @@ end
 class FilterDecodeIPMIChanAuthReply
   include BaseDecoder
   def decode(data)
-    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data) 
+    info = Dap::Proto::IPMI::Channel_Auth_Reply.new(data)
     return unless info.valid?
+    {}.tap do |h|
+      info.fields.each do |f|
+        name = f.name
+        h[name] = info.send(name).to_s
+      end
+    end
+  end
+end
+
+#
+# Decode a NAT-PMP External Address response
+#
+class FilterDecodeNATPMPExternalAddressResponse
+  include BaseDecoder
+  def decode(data)
+    return unless info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
@@ -192,11 +209,11 @@ class FilterDecodeNetbiosStatusReply
 
     {}.tap do |hash|
       hash['netbios_names'] = (inf)
-      hash['netbios_mac']   = maddr 
+      hash['netbios_mac']   = maddr
       hash['netbios_hname'] = names[0][0]
-      unless maddr == '00:00:00:00:00:00' 
+      unless maddr == '00:00:00:00:00:00'
         hash['netbios_mac_company']      = mac_company(maddr)
-        hash['netbios_mac_company_name'] = mac_company_name(maddr) 
+        hash['netbios_mac_company_name'] = mac_company_name(maddr)
       end
     end
   end
