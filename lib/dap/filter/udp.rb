@@ -245,7 +245,7 @@ class FilterDecodeMSSQLReply
     info = {}
     # Some binary characters often proceed key, restrict to alphanumeric and a few other common chars
     data.scan(/([A-Za-z0-9 \.\-_]+?);(.+?);/).each do | var, val|
-      info["mssql.#{var.force_encoding('BINARY')}"] = val.force_encoding('BINARY')
+      info["mssql.#{var.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )}"] = val.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )
     end
     info
   end
