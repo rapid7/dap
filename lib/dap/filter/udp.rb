@@ -145,7 +145,8 @@ end
 class FilterDecodeNATPMPExternalAddressResponse
   include BaseDecoder
   def decode(data)
-    return unless info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
+    info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
+    return unless info && info.valid?
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
