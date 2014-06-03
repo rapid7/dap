@@ -90,7 +90,7 @@ HELP=<<EOF
  the most common country, region within a country, and city within a region is returned first.
 
  Example with dap:
-   bzcat ../samples/ssl_certs.bz2 | ../bin/dap json + select host_ip + geo_ip host_ip + json | ./geo_ip_summary.rb --country host_ip.country_name --region host_ip.region --city host_ip.city > /tmp/ssl_geo.json
+   bzcat ../samples/ssl_certs.bz2 | ../bin/dap json + select host_ip + geo_ip host_ip + json | ./geo_ip_summary.rb --var host_ip > /tmp/ssl_geo.json
 EOF
 
 def parse_command_line(args)
@@ -98,7 +98,8 @@ def parse_command_line(args)
   options={
       :country => nil,
       :region => nil,
-      :city => nil
+      :city => nil,
+      :var => nil
   }
 
   OptionParser.new do | opts |
@@ -117,6 +118,13 @@ def parse_command_line(args)
 
     opts.on( '--city city_key', 'The name of the json key for the city.' ) do | val |
       options[:city] = val
+    end
+
+    opts.on('--var top-level-var', 'Sets the top level json name, for defining all of country/region/city') do | val |
+      options[:var] = val
+      options[:country] = "#{val}.country_name"
+      options[:region] = "#{val}.region"
+      options[:city]   = "#{val}.city"
     end
 
     opts.on_tail('-h', '--help', 'Show this message') do
