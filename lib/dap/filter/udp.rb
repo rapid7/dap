@@ -317,7 +317,8 @@ class FilterDecodeNTPMonlistReply
     pcnt, plen = data.slice!(0,4).unpack('nn')
     return info if plen != 72
 
-    hosts = []
+    remote_addresses = []
+    local_addresses = []
     idx = 0
     1.upto(pcnt) do
 
@@ -330,13 +331,16 @@ class FilterDecodeNTPMonlistReply
       #u_int32 flags;     /* flags about destination */
       #u_short port;      /* port number of last reception */
 
-      firsttime,lasttime,restr,count,saddr,daddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-      hosts << [saddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+      remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
       idx += plen
     end
 
-    info['ntp_hosts'] = hosts.join(' ')
-    info['ntp_hostcount'] = hosts.length.to_s
+    info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
+    info['ntp.monlist.remote_addresses.count'] = remote_addresses.size
+    info['ntp.monlist.local_addresses'] = local_addresses.join(' ')
+    info['ntp.monlist.local_addresses.count'] = local_addresses.size
 
     info
   end
