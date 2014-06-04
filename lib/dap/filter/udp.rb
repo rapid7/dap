@@ -320,6 +320,7 @@ class FilterDecodeNTPReply
       #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
       #    ... data ...
       if info['ntp.mode'] == 7
+        return info if data.size < 4
         mode7_data = data.slice!(0,4).unpack('n*')
         info['ntp.mode7.err'] = mode7_data.first >> 11
         info['ntp.mode7.data_items_count'] = mode7_data.first & 0b0000111111111111
