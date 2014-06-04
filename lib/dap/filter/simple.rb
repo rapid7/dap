@@ -103,6 +103,14 @@ class FilterExists
   end
 end
 
+class FilterNotExists < FilterExists
+  include Base
+  def process(doc)
+    exists_doc = super(doc)
+    exists_doc.empty? ? [ doc ] : [ ]
+  end
+end
+
 # Applies some simple annotation to the given fields, adding another
 # field name with the appended annotation type, i.e.:
 #

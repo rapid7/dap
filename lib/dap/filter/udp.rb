@@ -145,8 +145,8 @@ end
 class FilterDecodeNATPMPExternalAddressResponse
   include BaseDecoder
   def decode(data)
+    return unless (data && data.size == Dap::Proto::NATPMP::REQUIRED_SIZE)
     info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
-    return unless info && info.valid?
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
@@ -284,22 +284,41 @@ class FilterDecodeNTPMonlistReply
   include BaseDecoder
   def decode(sdata)
     info = {}
-    return if sdata.length < (72 + 16)
+    return if sdata.length < 4
 
     # Make a copy since our parser is destructive
     data = sdata.dup
 
-    # NTP headers 8 bytes
-    ntp_flags, ntp_auth, ntp_vers, ntp_code = data.slice!(0,4).unpack('C*')
+    # TODO: all of this with bitstruct?
+    # The format of the packet depends largely on the version, so extract just the version.
+    # Fortunately the version is in the same place regardless of NTP protocol version --
+    # The 3rd-5th bits of the first byte of the response
+    ntp_flags = data.slice!(0,1).unpack('C').first
+    ntp_version = (ntp_flags & 0b00111000) >> 3
+    info['ntp.version'] = ntp_version
 
-    info['ntp_auth'] = ntp_auth.to_s
-    info['ntp_version'] = ntp_vers.to_s
-    info['ntp_code'] = ntp_code.to_s
+    # NTP 2 & 3 share a common header, so parse those together
+    if ntp_version == 2 || ntp_version == 3
+      info['ntp.response'] = ntp_flags >> 7
+      info['ntp.more'] = (ntp_flags & 0b01000000) >> 6
+      info['ntp.mode'] = (ntp_flags & 0b00000111)
+      ntp_auth_seq, ntp_impl, ntp_rcode = data.slice!(0,3).unpack('C*')
+      info['ntp.implementation'] = ntp_impl
+      info['ntp.request_code'] = ntp_rcode
+    elsif ntp_version == 4
+      info['ntp.leap_indicator'] = ntp_flags >> 6
+      info['ntp.mode'] = ntp_flags & 0b00000111
+      info['ntp.peer.stratum'], info['ntp.peer.interval'], info['ntp.peer.precision'] = data.slice!(0,3).unpack('C*')
+      info['ntp.root.delay'], info['ntp.root.dispersion'], info['ntp.ref_id'] = data.slice!(0,12).unpack('N*')
+      info['ntp.timestamp.reference'], info['ntp.timestamp.origin'], info['ntp.timestamp.receive'], info['ntp.timestamp.transmit'] = data.slice!(0,32).unpack('Q*')
+    end
+
 
     pcnt, plen = data.slice!(0,4).unpack('nn')
-    return if plen != 72
+    return info if plen != 72
 
-    hosts = []
+    remote_addresses = []
+    local_addresses = []
     idx = 0
     1.upto(pcnt) do
 
@@ -312,13 +331,17 @@ class FilterDecodeNTPMonlistReply
       #u_int32 flags;     /* flags about destination */
       #u_short port;      /* port number of last reception */
 
-      firsttime,lasttime,restr,count,saddr,daddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-      hosts << [saddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+      remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+      local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
       idx += plen
     end
 
-    info['ntp_hosts'] = hosts.join(' ')
-    info['ntp_hostcount'] = hosts.length.to_s
+    info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
+    info['ntp.monlist.remote_addresses.count'] = remote_addresses.size
+    info['ntp.monlist.local_addresses'] = local_addresses.join(' ')
+    info['ntp.monlist.local_addresses.count'] = local_addresses.size
+
     info
   end
 end
