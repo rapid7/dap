@@ -278,9 +278,9 @@ class FilterDecodeSIPOptionsReply
 end
 
 #
-# Decode a NTP monlist Reply
+# Decode a NTP reply
 #
-class FilterDecodeNTPMonlistReply
+class FilterDecodeNTPReply
   include BaseDecoder
   def decode(sdata)
     info = {}
@@ -299,12 +299,63 @@ class FilterDecodeNTPMonlistReply
 
     # NTP 2 & 3 share a common header, so parse those together
     if ntp_version == 2 || ntp_version == 3
+      #     0                   1                   2                   3
+      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    |R|M| VN  | Mode|A|  Sequence   | Implementation|   Req Code    |
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
       info['ntp.response'] = ntp_flags >> 7
       info['ntp.more'] = (ntp_flags & 0b01000000) >> 6
       info['ntp.mode'] = (ntp_flags & 0b00000111)
       ntp_auth_seq, ntp_impl, ntp_rcode = data.slice!(0,3).unpack('C*')
       info['ntp.implementation'] = ntp_impl
       info['ntp.request_code'] = ntp_rcode
+
+      # if it is mode 7, parse that:
+      #     0                   1                   2                   3
+      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    |  Err  | Number of data items  |  MBZ  |   Size of data item   |
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    ... data ...
+      if info['ntp.mode'] == 7
+        mode7_data = data.slice!(0,4).unpack('n*')
+        info['ntp.mode7.err'] = mode7_data.first >> 11
+        info['ntp.mode7.data_items_count'] = mode7_data.first & 0b0000111111111111
+        info['ntp.mode7.mbz'] = mode7_data.last >> 11
+        info['ntp.mode7.data_item_size'] = mode7_data.last & 0b0000111111111111
+
+        # extra monlist response data
+        if ntp_rcode == 42
+          if info['ntp.mode7.data_item_size'] == 72
+            remote_addresses = []
+            local_addresses = []
+            idx = 0
+            1.upto(info['ntp.mode7.data_items_count']) do
+
+              #u_int32 firsttime; /* first time we received a packet */
+              #u_int32 lasttime;  /* last packet from this host */
+              #u_int32 restr;     /* restrict bits (was named lastdrop) */
+              #u_int32 count;     /* count of packets received */
+              #u_int32 addr;      /* host address V4 style */
+              #u_int32 daddr;     /* destination host address */
+              #u_int32 flags;     /* flags about destination */
+              #u_short port;      /* port number of last reception */
+
+              firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+              remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+              local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+              idx += info['ntp.mode7.data_item_size']
+            end
+
+            info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
+            info['ntp.monlist.remote_addresses.count'] = remote_addresses.size
+            info['ntp.monlist.local_addresses'] = local_addresses.join(' ')
+            info['ntp.monlist.local_addresses.count'] = local_addresses.size
+          end
+        end
+      end
     elsif ntp_version == 4
       info['ntp.leap_indicator'] = ntp_flags >> 6
       info['ntp.mode'] = ntp_flags & 0b00000111
@@ -312,35 +363,6 @@ class FilterDecodeNTPMonlistReply
       info['ntp.root.delay'], info['ntp.root.dispersion'], info['ntp.ref_id'] = data.slice!(0,12).unpack('N*')
       info['ntp.timestamp.reference'], info['ntp.timestamp.origin'], info['ntp.timestamp.receive'], info['ntp.timestamp.transmit'] = data.slice!(0,32).unpack('Q*')
     end
-
-
-    pcnt, plen = data.slice!(0,4).unpack('nn')
-    return info if plen != 72
-
-    remote_addresses = []
-    local_addresses = []
-    idx = 0
-    1.upto(pcnt) do
-
-      #u_int32 firsttime; /* first time we received a packet */
-      #u_int32 lasttime;  /* last packet from this host */
-      #u_int32 restr;     /* restrict bits (was named lastdrop) */
-      #u_int32 count;     /* count of packets received */
-      #u_int32 addr;      /* host address V4 style */
-      #u_int32 daddr;     /* destination host address */
-      #u_int32 flags;     /* flags about destination */
-      #u_short port;      /* port number of last reception */
-
-      firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-      remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-      local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-      idx += plen
-    end
-
-    info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
-    info['ntp.monlist.remote_addresses.count'] = remote_addresses.size
-    info['ntp.monlist.local_addresses'] = local_addresses.join(' ')
-    info['ntp.monlist.local_addresses.count'] = local_addresses.size
 
     info
   end
