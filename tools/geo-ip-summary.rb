@@ -90,7 +90,7 @@ HELP=<<EOF
  the most common country, region within a country, and city within a region is returned first.
 
  Example with dap:
-   bzcat ../samples/ssl_certs.bz2 | ../bin/dap json + select host_ip + geo_ip host_ip + json | ./geo_ip_summary.rb --var host_ip > /tmp/ssl_geo.json
+   bzcat ../samples/ssl_certs.bz2 | ../bin/dap json + select host_ip + geo_ip host_ip + json | ./geo-ip-summary.rb --var host_ip > /tmp/ssl_geo.json
 EOF
 
 def parse_command_line(args)
