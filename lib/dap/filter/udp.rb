@@ -6,6 +6,7 @@ require 'net/dns'
 require 'bit-struct'
 
 require 'dap/proto/addp'
+require 'dap/proto/dtls'
 require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
@@ -274,6 +275,23 @@ class FilterDecodeSIPOptionsReply
       end
     end
     info
+  end
+end
+
+#
+# Quickly decode a DTLS message
+#
+class FilterDecodeDTLS
+  include BaseDecoder
+  def decode(data)
+    info = Dap::Proto::DTLS::RecordLayer.new(data)
+    return unless (info && info.valid?)
+    {}.tap do |h|
+      info.fields.each do |f|
+        name = f.name
+        h[name] = info.send(name).to_s
+      end
+    end
   end
 end
 
