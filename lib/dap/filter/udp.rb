@@ -284,6 +284,7 @@ end
 class FilterDecodeDTLS
   include BaseDecoder
   def decode(data)
+    return unless data.length >= 13
     info = Dap::Proto::DTLS::RecordLayer.new(data)
     return unless (info && info.valid?)
     {}.tap do |h|
