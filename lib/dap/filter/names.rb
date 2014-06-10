@@ -134,7 +134,8 @@ class FilterSplitNonDynamicDomains
       gsub(/.*static\./, '').
       gsub(/.*dhcp[^\.]+\./, '').
       gsub(/^\d{6,100}\./, '').
-      gsub(/^\.+/, '')
+      gsub(/^\.+/, '').
+      tr('^a-z0-9.-', '')
 
     bits  = data.split('.')
     while (bits.length > 1)
