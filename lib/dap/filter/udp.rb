@@ -6,6 +6,7 @@ require 'net/dns'
 require 'bit-struct'
 
 require 'dap/proto/addp'
+require 'dap/proto/dtls'
 require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
@@ -145,7 +146,8 @@ end
 class FilterDecodeNATPMPExternalAddressResponse
   include BaseDecoder
   def decode(data)
-    return unless info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
+    return unless (data && data.size == Dap::Proto::NATPMP::REQUIRED_SIZE)
+    info = Dap::Proto::NATPMP::ExternalAddressResponse.new(data)
     {}.tap do |h|
       info.fields.each do |f|
         name = f.name
@@ -244,7 +246,7 @@ class FilterDecodeMSSQLReply
     info = {}
     # Some binary characters often proceed key, restrict to alphanumeric and a few other common chars
     data.scan(/([A-Za-z0-9 \.\-_]+?);(.+?);/).each do | var, val|
-      info["mssql.#{var.force_encoding('BINARY')}"] = val.force_encoding('BINARY')
+      info["mssql.#{var.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )}"] = val.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )
     end
     info
   end
@@ -277,47 +279,111 @@ class FilterDecodeSIPOptionsReply
 end
 
 #
-# Decode a NTP monlist Reply
+# Quickly decode a DTLS message
 #
-class FilterDecodeNTPMonlistReply
+class FilterDecodeDTLS
+  include BaseDecoder
+  def decode(data)
+    return unless data.length >= 13
+    info = Dap::Proto::DTLS::RecordLayer.new(data)
+    return unless (info && info.valid?)
+    {}.tap do |h|
+      info.fields.each do |f|
+        name = f.name
+        h[name] = info.send(name).to_s
+      end
+    end
+  end
+end
+
+#
+# Decode a NTP reply
+#
+class FilterDecodeNTPReply
   include BaseDecoder
   def decode(sdata)
     info = {}
-    return if sdata.length < (72 + 16)
+    return if sdata.length < 4
 
     # Make a copy since our parser is destructive
     data = sdata.dup
 
-    # NTP headers 8 bytes
-    ntp_flags, ntp_auth, ntp_vers, ntp_code = data.slice!(0,4).unpack('C*')
+    # TODO: all of this with bitstruct?
+    # The format of the packet depends largely on the version, so extract just the version.
+    # Fortunately the version is in the same place regardless of NTP protocol version --
+    # The 3rd-5th bits of the first byte of the response
+    ntp_flags = data.slice!(0,1).unpack('C').first
+    ntp_version = (ntp_flags & 0b00111000) >> 3
+    info['ntp.version'] = ntp_version
 
-    info['ntp_auth'] = ntp_auth.to_s
-    info['ntp_version'] = ntp_vers.to_s
-    info['ntp_code'] = ntp_code.to_s
+    # NTP 2 & 3 share a common header, so parse those together
+    if ntp_version == 2 || ntp_version == 3
+      #     0                   1                   2                   3
+      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    |R|M| VN  | Mode|A|  Sequence   | Implementation|   Req Code    |
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    pcnt, plen = data.slice!(0,4).unpack('nn')
-    return if plen != 72
+      info['ntp.response'] = ntp_flags >> 7
+      info['ntp.more'] = (ntp_flags & 0b01000000) >> 6
+      info['ntp.mode'] = (ntp_flags & 0b00000111)
+      ntp_auth_seq, ntp_impl, ntp_rcode = data.slice!(0,3).unpack('C*')
+      info['ntp.implementation'] = ntp_impl
+      info['ntp.request_code'] = ntp_rcode
 
-    hosts = []
-    idx = 0
-    1.upto(pcnt) do
+      # if it is mode 7, parse that:
+      #     0                   1                   2                   3
+      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    |  Err  | Number of data items  |  MBZ  |   Size of data item   |
+      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      #    ... data ...
+      if info['ntp.mode'] == 7
+        return info if data.size < 4
+        mode7_data = data.slice!(0,4).unpack('n*')
+        info['ntp.mode7.err'] = mode7_data.first >> 11
+        info['ntp.mode7.data_items_count'] = mode7_data.first & 0b0000111111111111
+        info['ntp.mode7.mbz'] = mode7_data.last >> 11
+        info['ntp.mode7.data_item_size'] = mode7_data.last & 0b0000111111111111
 
-      #u_int32 firsttime; /* first time we received a packet */
-      #u_int32 lasttime;  /* last packet from this host */
-      #u_int32 restr;     /* restrict bits (was named lastdrop) */
-      #u_int32 count;     /* count of packets received */
-      #u_int32 addr;      /* host address V4 style */
-      #u_int32 daddr;     /* destination host address */
-      #u_int32 flags;     /* flags about destination */
-      #u_short port;      /* port number of last reception */
+        # extra monlist response data
+        if ntp_rcode == 42
+          if info['ntp.mode7.data_item_size'] == 72
+            remote_addresses = []
+            local_addresses = []
+            idx = 0
+            1.upto(info['ntp.mode7.data_items_count']) do
 
-      firsttime,lasttime,restr,count,saddr,daddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-      hosts << [saddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-      idx += plen
+              #u_int32 firsttime; /* first time we received a packet */
+              #u_int32 lasttime;  /* last packet from this host */
+              #u_int32 restr;     /* restrict bits (was named lastdrop) */
+              #u_int32 count;     /* count of packets received */
+              #u_int32 addr;      /* host address V4 style */
+              #u_int32 daddr;     /* destination host address */
+              #u_int32 flags;     /* flags about destination */
+              #u_short port;      /* port number of last reception */
+
+              firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
+              remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+              local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
+              idx += info['ntp.mode7.data_item_size']
+            end
+
+            info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
+            info['ntp.monlist.remote_addresses.count'] = remote_addresses.size
+            info['ntp.monlist.local_addresses'] = local_addresses.join(' ')
+            info['ntp.monlist.local_addresses.count'] = local_addresses.size
+          end
+        end
+      end
+    elsif ntp_version == 4
+      info['ntp.leap_indicator'] = ntp_flags >> 6
+      info['ntp.mode'] = ntp_flags & 0b00000111
+      info['ntp.peer.stratum'], info['ntp.peer.interval'], info['ntp.peer.precision'] = data.slice!(0,3).unpack('C*')
+      info['ntp.root.delay'], info['ntp.root.dispersion'], info['ntp.ref_id'] = data.slice!(0,12).unpack('N*')
+      info['ntp.timestamp.reference'], info['ntp.timestamp.origin'], info['ntp.timestamp.receive'], info['ntp.timestamp.transmit'] = data.slice!(0,32).unpack('Q*')
     end
 
-    info['ntp_hosts'] = hosts.join(' ')
-    info['ntp_hostcount'] = hosts.length.to_s
     info
   end
 end
