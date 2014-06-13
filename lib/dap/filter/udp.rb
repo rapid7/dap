@@ -259,7 +259,12 @@ class FilterDecodeSIPOptionsReply
   include BaseDecoder
   def decode(data)
     info = {}
-    data.split(/\r?\n/).each do |line|
+    
+    return info unless (data and data.length > 0)
+    
+    head,body = data.to_s.split(/\r?\n\r?\n/, 2)
+
+    head.split(/\r?\n/).each do |line|
       case line
       when /^SIP\/(\d+\.\d+) (\d+)(.*)/
         info['sip_version'] = $1
@@ -274,6 +279,11 @@ class FilterDecodeSIPOptionsReply
         info["sip_#{var}"] = val
       end
     end
+
+    if body and body.length > 0
+      info['sip_data'] = body
+    end
+
     info
   end
 end
