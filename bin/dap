@@ -7,8 +7,14 @@ require 'bundler/setup'
 require 'shellwords'
 require 'dap'
 
+def version
+  $stderr.puts "dap #{Dap::VERSION}"
+  exit(0)
+end
+
 def usage
-  $stderr.puts "  Usage: #{$0} [input] + [filter] + [output]"
+  $stderr.puts ""
+  $stderr.puts "  Usage: #{$0}  [input] + [filter] + [output]"
   $stderr.puts "       --inputs"
   $stderr.puts "       --outputs"
   $stderr.puts "       --filters"
@@ -67,6 +73,10 @@ ARGV.join(' ').split(/\s*\+\s*/).each do |bit|
 
   if arg == "-h" or arg == "--help"
     usage
+  end
+
+  if arg == "--version" or arg == "-v"
+    version
   end
 
   if arg == "--inputs"

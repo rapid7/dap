@@ -2,6 +2,7 @@ module Dap
 
   require 'bundler/setup'
   
+  require 'dap/version'
   require 'dap/input'
   require 'dap/output'
   require 'dap/filter'

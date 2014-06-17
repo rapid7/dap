@@ -1,5 +1,10 @@
 
-module Rex
+#
+# This is stolen directly from librex/lib/mac_oui.rb
+#
+
+module Dap
+module Utils
 module Oui
 
   def self.lookup_oui_fullname(mac)
@@ -16576,5 +16581,6 @@ module Oui
       "FCFBFB" => ["Cisco", "Cisco Systems"],
       "FFFFFF" => ["BROADCAST", ""]
     }
+end
 end
 end

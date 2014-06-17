@@ -10,8 +10,7 @@ require 'dap/proto/dtls'
 require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
-
-require_relative '../../rex/mac_oui'
+require 'dap/utils/oui'
 
 #
 # Decode a MDNS Services probe response ( zmap: mdns_5353.pkt )
@@ -222,7 +221,7 @@ class FilterDecodeNetbiosStatusReply
 
   def mac_company(address)
     begin
-      name = Rex::Oui.lookup_oui_fullname(address)
+      name = Dap::Utils::Oui.lookup_oui_fullname(address)
       name.split("/").first.strip
     rescue => error
       ''
@@ -231,7 +230,7 @@ class FilterDecodeNetbiosStatusReply
 
   def mac_company_name(address)
     begin
-      Rex::Oui.lookup_oui_company_name(address)
+      Dap::Utils::Oui.lookup_oui_company_name(address)
     rescue => error
       ''
     end
