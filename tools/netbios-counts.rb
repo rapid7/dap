@@ -129,11 +129,12 @@ class GeoCounter
   def count(hash)
     city         = hash['ip.city'].to_s
     country_code = hash['ip.country_code'].to_s
+    country_name = hash['ip.country_name'].to_s
     region       = hash['ip.region'].to_s
     region_name  = hash['ip.region_name'].to_s
 
     @cities[[city, country_code]] += 1 unless city.empty?
-    @countries[country_code] += 1 unless country_code.empty?
+    @countries[[country_code, country_name]] += 1 unless country_code.empty?
     @regions[[region, region_name]] += 1 unless region.empty?
   end
   
@@ -152,7 +153,11 @@ class GeoCounter
   def top_countries
     [].tap do |counts|
       ordered_countries.to_a.take(NUM_TOP_RECORDS).each do |values|
-        counts << { 'country_code' => values[0], 'count' => values[1] }
+        counts << { 
+          'country_code' => values[0][0],
+          'country_name' => values[0][1], 
+          'count' => values[1] 
+        }
       end
     end
   end
