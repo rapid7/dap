@@ -17,9 +17,11 @@ EOF
 
 def parse_command_line(args)
 
-  options={
+  options = {
       :key    => nil,
-      :number => 100
+      :number => 100,
+      :subkey => nil,
+      :subnumber => 100
   }
 
   OptionParser.new do | opts |
@@ -28,12 +30,20 @@ def parse_command_line(args)
 
     opts.separator 'GeoIP name options:'
 
-    opts.on( '--key keyname', 'The name of json key to be summarized.') do | val |
+    opts.on( '--key keyname', 'The name of the json key to be summarized.') do | val |
       options[:key] = val
+    end
+    
+    opts.on( '--subkey keyname', 'The name of the json subkey to be summarized under each key') do | val |
+      options[:subkey] = val
     end
 
     opts.on( '--top num_items', 'Return top n occurrences.') do | val |
       options[:number] = val.to_i
+    end
+    
+    opts.on( '--subtop num_items', 'Return top n occurrences in each subkey.') do | val |
+      options[:subnumber] = val.to_i
     end
 
     opts.on_tail('-h', '--help', 'Show this message') do
@@ -55,6 +65,7 @@ end
 summary = {}
 opts = parse_command_line(ARGV)
 key  = opts[:key]
+skey = opts[:subkey]
 
 $stdin.each_line do |line|
   json = Oj.load(line.to_s.unpack("C*").pack("C*").strip) rescue nil
@@ -63,13 +74,29 @@ $stdin.each_line do |line|
   val = json[key]
   next unless val
   
-  summary[val] ||= 0
-  summary[val] += 1
+  summary[val] ||= {}
+  summary[val][:count] ||= 0
+  summary[val][:count]  += 1
+
+  if skey
+    sval = json[skey] || ''
+    summary[val][sval] ||= {}
+    summary[val][sval][:count] ||= 0
+    summary[val][sval][:count]  += 1
+  end
+
 end
 
 output = {}
-summary.keys.sort{|a,b| summary[b] <=> summary[a] }[0, opts[:number]].each do |k|
-  output[k] = summary[k]
+summary.keys.sort{|a,b| summary[b][:count] <=> summary[a][:count] }[0, opts[:number]].each do |k|
+  unless skey
+    output[k] = summary[k][:count]
+  else
+    output[k] = { "count" => summary[k][:count], skey => {} }
+    summary[k].keys.select{|x| x != :count}.sort{|a,b| summary[k][b][:count] <=> summary[k][a][:count] }[0, opts[:subnumber]].each do |sk|
+      output[k][skey][sk] = summary[k][sk][:count]
+    end
+  end
 end
 
 $stdout.puts Oj.dump(output)
