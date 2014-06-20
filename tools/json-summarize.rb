@@ -3,6 +3,7 @@ require 'oj'
 require 'optparse'
 
 HELP=<<EOF
+
  This script is used to locate the frequency of a given key in a json document. It will
  inspect and increment the frequency count for each instance of the key found in the json
  document, then order them in descending order and output a json document with the top n
@@ -17,8 +18,8 @@ EOF
 def parse_command_line(args)
 
   options={
-      :key => nil,
-      :number => nil
+      :key    => nil,
+      :number => 100
   }
 
   OptionParser.new do | opts |
@@ -40,42 +41,38 @@ def parse_command_line(args)
       exit(0)
     end
     opts.parse!(args)
-    options
+
+    if not options[:key]
+      $stderr.puts opts
+      exit(1)
+    end
   end
+
+
+
   options
 end
 
-# Sorts the hash in descending numerical value for the values
-# part of the hash, returning the sorted hash.
-#
-def order_hash(h)
-  keys = h.keys.sort { | k1,k2 |
-    ret = ( h[k1] <=> h[k2] ) * -1
-    ret = k1 <=> k2 if ret == 0 && k1!=nil && k2!=nil
-    ret
-  }
-  # build up return hash
-  ret_hash = {}
-  keys.each do | key |
-    ret_hash[key] = h[key]
-  end
 
-  ret_hash
+summary = {}
+opts = parse_command_line(ARGV)
+key  = opts[:key]
+
+$stdin.each_line do |line|
+  json = Oj.load(line.to_s.unpack("C*").pack("C*").strip) rescue nil
+  next unless json
+
+  val = json[key]
+  next unless val
+  
+  summary[val] ||= 0
+  summary[val] += 1
 end
 
+output = {}
+summary.keys.sort{|a,b| summary[b] <=> summary[a] }[0, opts[:number]].each do |k|
+  output[k] = summary[k]
+end
 
-
-
-  summary={}
-  opts = parse_command_line(ARGV)
-  key = opts[:key]
-
-  while line = gets
-    val = Oj.load(line.chomp.strip)[key]
-    summary[val] ||= 0
-    summary[val] += 1
-  end
-
-  summary = Hash[ *order_hash(summary).flatten.slice(0,2*opts[:number]) ]
-  puts Oj.dump(summary)
+$stdout.puts Oj.dump(output)
 
