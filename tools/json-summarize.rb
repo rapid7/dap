@@ -37,8 +37,8 @@ def parse_command_line(args)
     end
 
     opts.on_tail('-h', '--help', 'Show this message') do
-      puts opts
-      exit(0)
+      $stderr.puts puts opts
+      exit(1)
     end
     opts.parse!(args)
 
@@ -47,8 +47,6 @@ def parse_command_line(args)
       exit(1)
     end
   end
-
-
 
   options
 end
