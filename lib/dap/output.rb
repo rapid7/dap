@@ -107,7 +107,12 @@ module Output
       self.open(args.first)
     end
 
-    def write_record(doc)  
+    def write_record(doc)
+      doc.each_pair do |k,v|
+        if v.kind_of?(::String)
+         doc[k] = v.encode(v.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+        end
+      end
       self.fd.puts Oj.dump(doc)
     end
 
