@@ -74,7 +74,7 @@ end
 #
 class FilterDecodeWDBRPC_Reply
   include BaseDecoder
-  def decode(data)
+  def decode(buff)
     info = {}
     head = buff.slice!(0,36)
     info['agent_ver'] = wdbrpc_decode_str(buff)
