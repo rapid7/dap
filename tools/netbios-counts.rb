@@ -263,11 +263,13 @@ unless options.exclude_default_counts
   counters << GeoCounter.new
   counters << SambaCounter.new
 end
+
 counters << HostnameContainingCounter.new(options.hostname_containing) unless options.hostname_containing.nil?
 
-while line=gets
-  hash = Oj.load(line.strip)
-  counters.each { |counter| counter.count(hash) }
+$stdin.each_line do |line|
+  json = Oj.load(line.unpack("C*").pack("C*").strip) rescue nil
+  next unless json
+  counters.each { |counter| counter.count(json) }
 end
 
 summary = {}

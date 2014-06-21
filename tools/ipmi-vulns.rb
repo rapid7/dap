@@ -22,6 +22,8 @@ def search(hash)
   hash
 end
 
-while line=gets
-  puts Oj.dump(search(Oj.load(line.strip)))
+$stdin.each_line do |line|
+  json = Oj.load(line.unpack("C*").pack("C*").strip) rescue nil
+  next unless json
+  puts Oj.dump(search(json))
 end

@@ -28,8 +28,8 @@ def search(hash, service)
   hash
 end
 
-while line=gets
-  #line.encode!('UTF-8', invalid: :replace, undef: :replace, replace: '')
-  #line.force_encoding('BINARY')
-  puts Oj.dump( search( Oj.load(line.strip), :upnp ))
+$stdin.each_line do |line|
+  json = Oj.load(line.unpack("C*").pack("C*").strip) rescue nil
+  next unless json
+  puts Oj.dump(search(json, :upnp))
 end

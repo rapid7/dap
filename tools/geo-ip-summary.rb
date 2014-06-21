@@ -136,14 +136,20 @@ def parse_command_line(args)
   end
   options
 end
-  opts = parse_command_line(ARGV)
-  raise 'Need json key names for country,region and city.' if opts[:country].nil? || opts[:region].nil? || opts[:city].nil?
+opts = parse_command_line(ARGV)
 
-  summarizer = GeoIPSummary.new(opts[:country], opts[:region], opts[:city])
-  while line=gets
-    summarizer.process_hash(Oj.load(line.strip))
-  end
 
-  Oj.default_options={:indent=>2}
+raise 'Need json key names for country,region and city.' if opts[:country].nil? || opts[:region].nil? || opts[:city].nil?
 
-  puts Oj.dump(summarizer.order_tree)
+summarizer = GeoIPSummary.new(opts[:country], opts[:region], opts[:city])
+
+
+$stdin.each_line do |line|
+  json = Oj.load(line.unpack("C*").pack("C*").strip) rescue nil
+  next unless json
+  summarizer.process_hash(json)
+end
+
+Oj.default_options={:indent=>2}
+
+puts Oj.dump(summarizer.order_tree)
