@@ -75,26 +75,42 @@ end
 class FilterDecodeWDBRPC_Reply
   include BaseDecoder
   def decode(data)
+    buff = data.dup
+
     info = {}
     head = buff.slice!(0,36)
-    info['agent_ver'] = wdbrpc_decode_str(buff)
-    info['agent_mtu'] = wdbrpc_decode_int(buff)
-    info['agent_mod'] = wdbrpc_decode_int(buff)
-    info['rt_type']          = wdbrpc_decode_int(buff)
-    info['rt_vers']          = wdbrpc_decode_str(buff)
-    info['rt_cpu_type']      = wdbrpc_decode_int(buff)
-    info['rt_has_fpp']       = wdbrpc_decode_bool(buff)
-    info['rt_has_wp']        = wdbrpc_decode_bool(buff)
-    info['rt_page_size']     = wdbrpc_decode_int(buff)
-    info['rt_endian']        = wdbrpc_decode_int(buff)
-    info['rt_bsp_name']      = wdbrpc_decode_str(buff)
-    info['rt_bootline']      = wdbrpc_decode_str(buff)
-    info['rt_membase']       = wdbrpc_decode_int(buff)
-    info['rt_memsize']       = wdbrpc_decode_int(buff)
-    info['rt_region_count']  = wdbrpc_decode_int(buff)
-    info['rt_regions']       = wdbrpc_decode_arr(buff, :int)
-    info['rt_hostpool_base'] = wdbrpc_decode_int(buff)
-    info['rt_hostpool_size'] = wdbrpc_decode_int(buff)
+    return info unless head.to_s.length == 36
+    return unless buff.length > 0
+    info['agent_ver'] = Dap::Proto::WDBRPC.wdbrpc_decode_str(buff)
+    info['agent_mtu'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['agent_mod'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_type']          = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_vers']          = Dap::Proto::WDBRPC.wdbrpc_decode_str(buff)
+    info['rt_cpu_type']      = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_has_fpp']       = Dap::Proto::WDBRPC.wdbrpc_decode_bool(buff)
+    info['rt_has_wp']        = Dap::Proto::WDBRPC.wdbrpc_decode_bool(buff)
+    info['rt_page_size']     = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_endian']        = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_bsp_name']      = Dap::Proto::WDBRPC.wdbrpc_decode_str(buff)
+    info['rt_bootline']      = Dap::Proto::WDBRPC.wdbrpc_decode_str(buff)
+    info['rt_membase']       = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_memsize']       = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_region_count']  = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_regions']       = Dap::Proto::WDBRPC.wdbrpc_decode_arr(buff, :int)
+    info['rt_hostpool_base'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    info['rt_hostpool_size'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
+    
+    if info['rt_regions']
+      info['rt_regions'] = info['rt_regions'].map{|x| x.to_s}.join(" ")
+    end
+
+    nulls = []
+    info.each_pair do |k,v|
+      nulls << k if v.nil?
+    end
+
+    nulls.each {|k| info.delete(k) }
+
     info
   end
 end
