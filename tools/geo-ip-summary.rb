@@ -123,7 +123,7 @@ def parse_command_line(args)
     opts.on('--var top-level-var', 'Sets the top level json name, for defining all of country/region/city') do | val |
       options[:var] = val
       options[:country] = "#{val}.country_name"
-      options[:region] = "#{val}.region"
+      options[:region] = "#{val}.region_name"
       options[:city]   = "#{val}.city"
     end
 
