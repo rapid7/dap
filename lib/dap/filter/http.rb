@@ -113,6 +113,7 @@ class FilterDecodeHTTPReply
 
     save["http_code"] = $1.to_i
     save["http_message"] = $2.strip
+    save["http_raw_headers"] = {}
 
     clen = nil
 
@@ -148,6 +149,9 @@ class FilterDecodeHTTPReply
 
       when /^Content-Length:\s*(.*)/i
         clen = $1.strip.to_i
+
+      when /^([A-Za-z0-9\-]+):\s*(.*)/i
+        save["http_raw_headers"][$1.downcase.strip] = $2.strip
 
       when ""
         break
