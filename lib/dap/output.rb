@@ -104,7 +104,7 @@ module Output
     include FileDestination
 
     def stringify(o)
-      o.kind_of?( ::String )
+      if o.kind_of?( ::String )
         o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
       else
         o.to_s
