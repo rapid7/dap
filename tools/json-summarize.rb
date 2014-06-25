@@ -17,7 +17,11 @@ EOF
 
 
 def stringify(o)
-  o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+  o.kind_of?( ::String )
+    o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+  else
+    o.to_s
+  end
 end
 
 def parse_command_line(args)
