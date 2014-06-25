@@ -103,6 +103,10 @@ module Output
     
     include FileDestination
 
+    def stringify(o)
+      o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+    end
+
     def initialize(args)
       self.open(args.first)
     end
@@ -110,9 +114,11 @@ module Output
     def write_record(doc)
       ndoc = {}
       doc.each_pair do |k,v|
-        k = k.to_s
+        k = stringify(k)
         if v.kind_of?(::String)
-         ndoc[k] = v.encode(v.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+          ndoc[k] = stringify(v)
+        else
+          ndoc[k] = v
         end
       end
       self.fd.puts Oj.dump(ndoc)
