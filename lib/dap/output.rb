@@ -108,12 +108,14 @@ module Output
     end
 
     def write_record(doc)
+      ndoc = {}
       doc.each_pair do |k,v|
+        k = k.to_s
         if v.kind_of?(::String)
-         doc[k] = v.encode(v.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+         ndoc[k] = v.encode(v.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
         end
       end
-      self.fd.puts Oj.dump(doc)
+      self.fd.puts Oj.dump(ndoc)
     end
 
   end
