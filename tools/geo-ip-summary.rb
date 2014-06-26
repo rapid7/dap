@@ -16,10 +16,18 @@ class GeoIPSummary
     @tree['count'] = 0
   end
 
+  def stringify(o)
+    if o.kind_of?( ::String )
+      o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+    else
+      o.to_s
+    end
+  end
+
   def process_hash( json_hash )
-    country = json_hash[@country_name]
-    region  = json_hash[@region_name] || 'Undefined Region'
-    city    = json_hash[@city_name]   || 'Undefined City'
+    country = stringify( json_hash[@country_name] )
+    region  = stringify( json_hash[@region_name] || 'Undefined Region' )
+    city    = stringify( json_hash[@city_name]   || 'Undefined City' )
 
     # Create subhashes and values as needed on down the tree
     @tree[country] ||= {}

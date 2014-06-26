@@ -15,6 +15,15 @@ HELP=<<EOF
     unpigz -c /tmp/2014-05-05-mssql-udp-decoded.json.gz | ruby ~/src/dap/tools/json-summarize.rb --top 20 --key data.mssql.Version
 EOF
 
+
+def stringify(o)
+  if o.kind_of?( ::String ) 
+    o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+  else
+    o.to_s
+  end
+end
+
 def parse_command_line(args)
 
   options = {
@@ -69,17 +78,16 @@ skey = opts[:subkey]
 
 $stdin.each_line do |line|
   json = Oj.load(line.to_s.unpack("C*").pack("C*").strip) rescue nil
-  next unless json
+  next unless ( json && json[key] )
 
-  val = json[key]
-  next unless val
-  
+  val = stringify(json[key])
+
   summary[val] ||= {}
   summary[val][:count] ||= 0
   summary[val][:count]  += 1
 
   if skey
-    sval = json[skey] || ''
+    sval = stringify(json[skey])
     summary[val][sval] ||= {}
     summary[val][sval][:count] ||= 0
     summary[val][sval][:count]  += 1
@@ -100,4 +108,3 @@ summary.keys.sort{|a,b| summary[b][:count] <=> summary[a][:count] }[0, opts[:num
 end
 
 $stdout.puts Oj.dump(output)
-
