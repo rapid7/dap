@@ -99,7 +99,7 @@ class FilterDecodeWDBRPC_Reply
     info['rt_regions']       = Dap::Proto::WDBRPC.wdbrpc_decode_arr(buff, :int)
     info['rt_hostpool_base'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
     info['rt_hostpool_size'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
-    
+
     if info['rt_regions']
       info['rt_regions'] = info['rt_regions'].map{|x| x.to_s}.join(" ")
     end
@@ -274,9 +274,9 @@ class FilterDecodeSIPOptionsReply
   include BaseDecoder
   def decode(data)
     info = {}
-    
+
     return info unless (data and data.length > 0)
-    
+
     head,body = data.to_s.split(/\r?\n\r?\n/, 2)
 
     head.split(/\r?\n/).each do |line|
@@ -318,6 +318,97 @@ class FilterDecodeDTLS
         h[name] = info.send(name).to_s
       end
     end
+  end
+end
+
+#
+# Decode a BACnet Read Property Multiple reply
+#
+class FilterDecodeBacnetRPMReply
+  include BaseDecoder
+  TAG_TYPE_LENGTHS = {
+    10 => 4,
+    11 => 4,
+  }
+  def decode(sdata)
+    info = {}
+    return if sdata.length < 9
+
+    data = sdata.dup
+
+    bacnet_vlc_type, bacnet_vlc_function, bacnet_vlc_length = data.slice!(0,4).unpack("CCn")
+    # if this isn't a BACnet/IP (0x81) original unicast NPDU (0x0a), abort
+    if bacnet_vlc_type != 0x81 || bacnet_vlc_function != 0x0a
+      return info
+    else
+      info['bacnet_vlc_type'] = bacnet_vlc_type
+      info['bacnet_vlc_function'] = bacnet_vlc_function
+      info['bacnet_vlc_length'] = bacnet_vlc_length
+    end
+
+    # we only know how to decode version 1, so abort if it is anything else
+    # but store the version in the event that we want to parse these later
+    bacnet_npdu_version, bacnet_npdu_control = data.slice!(0,2).unpack("CC")
+    info['bacnet_npdu_version'] = bacnet_npdu_version
+    info['bacnet_npdu_control'] = bacnet_npdu_control
+    return info if bacnet_npdu_version != 1
+
+    bacnet_apdu_type_flags, bacnet_apdu_invoke_id, bacnet_apdu_service_choice = data.slice!(0,3).unpack("CCC")
+    bacnet_apdu_type = bacnet_apdu_type_flags >> 4
+    bacnet_apdu_flags = bacnet_apdu_type_flags & 0b00001111
+    info['bacnet_apdu_type'] = bacnet_apdu_type
+    info['bacnet_apdu_flags'] = bacnet_apdu_flags
+    info['bacnet_apdu_invoke_id'] = bacnet_apdu_invoke_id
+    info['bacnet_apdu_service_choice'] = bacnet_apdu_service_choice
+    return info unless (bacnet_apdu_type == 3 && bacnet_apdu_service_choice == 14)
+
+    return info unless data.size > 5
+    # XXX: don't know what to do with this right now
+    bacnet_object_id = data.slice!(0,5)
+    return info unless data.slice!(0,1).unpack('C').first == 0x1e
+    props = {}
+    # XXX: I think this is ASN.1, but still need to confirm
+    while (true) do
+      break if data.size < 2
+      property_tag, property_id = data.slice!(0,2).unpack('CC')
+      props[property_id] = true
+      # slice off the opening tag
+      otag = data.slice!(0,1).unpack('C').first
+      if otag == 0x5e
+        data.slice!(0,5)
+        props[property_id] = nil
+      else
+        # it isn't clear if the length is one byte wide followed by one byte of
+        # 0x00 for spacing or if it is two bytes little endian.  Looks like the later.
+        # XXX?
+        tag_flags = data.slice!(0,1).unpack('C').first
+        tag_type = tag_flags >> 4
+        if TAG_TYPE_LENGTHS.key?(tag_type)
+          puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
+          props[property_id] = data.slice!(0, TAG_TYPE_LENGTHS[tag_type])
+        else
+          if tag_type == 7
+            property_length = data.slice!(0,2).unpack('v').first
+            puts "Handled property #{property_id}'s tag type #{tag_type}"
+              property_length -= 1
+              # handle String
+              props[property_id] = data.slice!(0, property_length)
+          else
+            puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
+          end
+        end
+
+        ctag = data.slice!(0,1).unpack('C')
+      end
+      break if data.size == 0
+    end
+
+    props.each do |k,v|
+      info[k] = v
+    end
+
+
+    info
   end
 end
 
