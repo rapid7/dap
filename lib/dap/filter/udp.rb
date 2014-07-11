@@ -528,7 +528,8 @@ end
       # Skip past header that contains no rpc services
       stripped = data[8..-1]
       curr_pos = 0
-      has_next = stripped[curr_pos,8].to_i(16); curr_pos += 8
+      has_next = ( !stripped.nil? && stripped.length >= 8 ? stripped[curr_pos,8].to_i(16) : 0 )
+      curr_pos +=8
       while has_next > 0
         # See if enough data present for next set of reads.
         if data.length > curr_pos+40
