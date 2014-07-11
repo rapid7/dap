@@ -72,6 +72,7 @@ module Output
 
       if header and not fields.include?(FIELD_WILDCARD)
         self.fd.puts self.fields.join(self.delimiter)
+        self.fd.flush
       end
 
     end
@@ -92,6 +93,7 @@ module Output
       return unless out.length > 0
 
       self.fd.puts out.join(self.delimiter)
+      self.fd.flush
     end
 
   end
@@ -126,6 +128,7 @@ module Output
         end
       end
       self.fd.puts Oj.dump(ndoc)
+      self.fd.flush
     end
 
   end
