@@ -232,7 +232,7 @@ class FilterSplitComma
     lines = [ ]
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
-        doc[k].to_s.split(/m/).each do |line|
+        doc[k].to_s.split(/,/).each do |line|
           lines << doc.merge({ "#{k}.word" => line })
         end
       end
