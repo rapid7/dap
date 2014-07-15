@@ -479,11 +479,18 @@ class FilterDecodeNTPReply
               #u_int32 daddr;     /* destination host address */
               #u_int32 flags;     /* flags about destination */
               #u_short port;      /* port number of last reception */
-
-              firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-              remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              idx += info['ntp.mode7.data_item_size']
+              data_block = data[idx, 30]
+              # Occasionally not all of data captured, need to defensively handle this case.
+              if data_block
+                firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data_block.unpack("NNNNNNNn")
+                # even if data_block is not nil, might not have all of the 30 bytes of data, so make sure
+                # that remote and local address are non-nil.
+                remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".") if raddr
+                local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")  if laddr
+                idx += info['ntp.mode7.data_item_size']
+              else
+                break
+              end
             end
 
             info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
