@@ -26,8 +26,9 @@ class FilterDecodeMDNSSrvReply
       svcs = r.answer.map {|x| (x.value.to_s) }
       svcs.delete('')
       return if not (svcs and svcs.length > 0)
-      return { "mdns_services" => svc.join(" ") }
+      return { "mdns_services" => svcs.join(" ") }
     rescue ::Exception
+      { }
     end
     nil
   end
