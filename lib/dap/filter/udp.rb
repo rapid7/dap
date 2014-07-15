@@ -327,6 +327,7 @@ end
 class FilterDecodeBacnetRPMReply
   include BaseDecoder
   TAG_TYPE_LENGTHS = {
+    2 => 2,
     10 => 4,
     11 => 4,
   }
@@ -369,13 +370,15 @@ class FilterDecodeBacnetRPMReply
     props = {}
     # XXX: I think this is ASN.1, but still need to confirm
     while (true) do
-      break if data.size < 2
+      #puts "size is #{data.size}, data is #{data.each_byte.map { |b| b.to_s(16) }.join(' ')}"
+      break if data.size < 4
       property_tag, property_id = data.slice!(0,2).unpack('CC')
       props[property_id] = true
       # slice off the opening tag
       otag = data.slice!(0,1).unpack('C').first
       if otag == 0x5e
         data.slice!(0,5)
+        #puts "Property #{property_id} unknown"
         props[property_id] = nil
       else
         # it isn't clear if the length is one byte wide followed by one byte of
@@ -384,23 +387,28 @@ class FilterDecodeBacnetRPMReply
         tag_flags = data.slice!(0,1).unpack('C').first
         tag_type = tag_flags >> 4
         if TAG_TYPE_LENGTHS.key?(tag_type)
-          puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
+          #puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
           props[property_id] = data.slice!(0, TAG_TYPE_LENGTHS[tag_type])
         else
           if tag_type == 7
             property_length = data.slice!(0,2).unpack('v').first
-            puts "Handled property #{property_id}'s tag type #{tag_type}"
+            #puts "Handled property #{property_id}'s #{property_length}-byte tag type #{tag_type}"
               property_length -= 1
               # handle String
               props[property_id] = data.slice!(0, property_length)
           else
-            puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
+            #puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
           end
         end
 
         ctag = data.slice!(0,1).unpack('C')
       end
-      break if data.size == 0
+      if data.size == 0
+        #puts "done"
+        break
+      else
+        #puts "going"
+      end
     end
 
     props.each do |k,v|
