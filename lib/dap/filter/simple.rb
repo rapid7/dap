@@ -336,5 +336,29 @@ class FilterFieldSplitArray
   end
 end
 
+class FilterFieldArrayJoinComma
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(v) and doc[v].respond_to?(:each)
+        doc[k] = doc[v].join(",")
+      end
+    end
+   [ doc ]
+  end
+end
+
+class FilterFieldArrayJoinWhitespace
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(v) and doc[v].respond_to?(:each)
+        doc[k] = doc[v].join(" ")
+      end
+    end
+   [ doc ]
+  end
+end
+
 end
 end
