@@ -26,7 +26,7 @@ class FilterDecodeMDNSSrvReply
       svcs = r.answer.map {|x| (x.value.to_s) }
       svcs.delete('')
       return if not (svcs and svcs.length > 0)
-      return { "mdns_services" => svcs.join(" ") }
+      return { "mdns_services" => svcs }
     rescue ::Exception
       { }
     end
@@ -549,7 +549,7 @@ end
     end
 
     def decode(data)
-      { 'rpc_services'=>parse_data(data).join(' ') }
+      { 'rpc_services'=>parse_data(data) }
     end
   end
 
