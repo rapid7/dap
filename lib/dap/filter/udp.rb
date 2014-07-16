@@ -328,6 +328,7 @@ end
 class FilterDecodeBacnetRPMReply
   include BaseDecoder
   TAG_TYPE_LENGTHS = {
+    2 => 2,
     10 => 4,
     11 => 4,
   }
@@ -370,13 +371,15 @@ class FilterDecodeBacnetRPMReply
     props = {}
     # XXX: I think this is ASN.1, but still need to confirm
     while (true) do
-      break if data.size < 2
+      #puts "size is #{data.size}, data is #{data.each_byte.map { |b| b.to_s(16) }.join(' ')}"
+      break if data.size < 4
       property_tag, property_id = data.slice!(0,2).unpack('CC')
       props[property_id] = true
       # slice off the opening tag
       otag = data.slice!(0,1).unpack('C').first
       if otag == 0x5e
         data.slice!(0,5)
+        #puts "Property #{property_id} unknown"
         props[property_id] = nil
       else
         # it isn't clear if the length is one byte wide followed by one byte of
@@ -385,23 +388,28 @@ class FilterDecodeBacnetRPMReply
         tag_flags = data.slice!(0,1).unpack('C').first
         tag_type = tag_flags >> 4
         if TAG_TYPE_LENGTHS.key?(tag_type)
-          puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
+          #puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
           props[property_id] = data.slice!(0, TAG_TYPE_LENGTHS[tag_type])
         else
           if tag_type == 7
             property_length = data.slice!(0,2).unpack('v').first
-            puts "Handled property #{property_id}'s tag type #{tag_type}"
+            #puts "Handled property #{property_id}'s #{property_length}-byte tag type #{tag_type}"
               property_length -= 1
               # handle String
               props[property_id] = data.slice!(0, property_length)
           else
-            puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
+            #puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
           end
         end
 
         ctag = data.slice!(0,1).unpack('C')
       end
-      break if data.size == 0
+      if data.size == 0
+        #puts "done"
+        break
+      else
+        #puts "going"
+      end
     end
 
     props.each do |k,v|
@@ -479,11 +487,18 @@ class FilterDecodeNTPReply
               #u_int32 daddr;     /* destination host address */
               #u_int32 flags;     /* flags about destination */
               #u_short port;      /* port number of last reception */
-
-              firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-              remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              idx += info['ntp.mode7.data_item_size']
+              data_block = data[idx, 30]
+              # Occasionally not all of data captured, need to defensively handle this case.
+              if data_block
+                firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data_block.unpack("NNNNNNNn")
+                # even if data_block is not nil, might not have all of the 30 bytes of data, so make sure
+                # that remote and local address are non-nil.
+                remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".") if raddr
+                local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")  if laddr
+                idx += info['ntp.mode7.data_item_size']
+              else
+                break
+              end
             end
 
             info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
