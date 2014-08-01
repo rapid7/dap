@@ -35,7 +35,7 @@ class FilterVulnMatchIPMI
     doc = search(doc, :ipmi)
 
     if (doc['data.ipmi_user_non_null'] == "0") && (doc['data.ipmi_user_null'] == "0")
-      doc["vulnerability"] += ["IPMI-ANON"]
+      doc["vulnerability"] = ( doc["vulnerability"] ? doc["vulnerability"] + ["IPMI-ANON"] : ["IPMI-ANON"] )
     end
 
     [ doc ]
