@@ -80,17 +80,33 @@ $stdin.each_line do |line|
   json = Oj.load(line.to_s.unpack("C*").pack("C*").strip) rescue nil
   next unless ( json && json[key] )
 
-  val = stringify(json[key])
+  if json[key].kind_of?(Array)
+    vals = json[key]
+  else
+    vals = [json[key],]
+  end
 
-  summary[val] ||= {}
-  summary[val][:count] ||= 0
-  summary[val][:count]  += 1
+  vals.each do |val|
+    val = stringify(val)
 
-  if skey
-    sval = stringify(json[skey])
-    summary[val][sval] ||= {}
-    summary[val][sval][:count] ||= 0
-    summary[val][sval][:count]  += 1
+    summary[val] ||= {}
+    summary[val][:count] ||= 0
+    summary[val][:count]  += 1
+
+    if skey
+      if json[skey].kind_of?(Array)
+        svals = json[skey]
+      else
+        svals = [json[skey],]
+      end
+
+      svals.each do |sval|
+        sval = stringify(sval)
+        summary[val][sval] ||= {}
+        summary[val][sval][:count] ||= 0
+        summary[val][sval][:count]  += 1
+      end
+    end
   end
 
 end

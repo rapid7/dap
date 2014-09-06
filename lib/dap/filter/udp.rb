@@ -26,8 +26,9 @@ class FilterDecodeMDNSSrvReply
       svcs = r.answer.map {|x| (x.value.to_s) }
       svcs.delete('')
       return if not (svcs and svcs.length > 0)
-      return { "mdns_services" => svc.join(" ") }
+      return { "mdns_services" => svcs }
     rescue ::Exception
+      { }
     end
     nil
   end
@@ -327,6 +328,7 @@ end
 class FilterDecodeBacnetRPMReply
   include BaseDecoder
   TAG_TYPE_LENGTHS = {
+    2 => 2,
     10 => 4,
     11 => 4,
   }
@@ -369,13 +371,15 @@ class FilterDecodeBacnetRPMReply
     props = {}
     # XXX: I think this is ASN.1, but still need to confirm
     while (true) do
-      break if data.size < 2
+      #puts "size is #{data.size}, data is #{data.each_byte.map { |b| b.to_s(16) }.join(' ')}"
+      break if data.size < 4
       property_tag, property_id = data.slice!(0,2).unpack('CC')
       props[property_id] = true
       # slice off the opening tag
       otag = data.slice!(0,1).unpack('C').first
       if otag == 0x5e
         data.slice!(0,5)
+        #puts "Property #{property_id} unknown"
         props[property_id] = nil
       else
         # it isn't clear if the length is one byte wide followed by one byte of
@@ -384,23 +388,28 @@ class FilterDecodeBacnetRPMReply
         tag_flags = data.slice!(0,1).unpack('C').first
         tag_type = tag_flags >> 4
         if TAG_TYPE_LENGTHS.key?(tag_type)
-          puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
+          #puts "Know how to handle property #{property_id}'s tag type #{tag_type}"
           props[property_id] = data.slice!(0, TAG_TYPE_LENGTHS[tag_type])
         else
           if tag_type == 7
             property_length = data.slice!(0,2).unpack('v').first
-            puts "Handled property #{property_id}'s tag type #{tag_type}"
+            #puts "Handled property #{property_id}'s #{property_length}-byte tag type #{tag_type}"
               property_length -= 1
               # handle String
               props[property_id] = data.slice!(0, property_length)
           else
-            puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
+            #puts "Don't know how to handle property #{property_id}'s tag type #{tag_type}"
           end
         end
 
         ctag = data.slice!(0,1).unpack('C')
       end
-      break if data.size == 0
+      if data.size == 0
+        #puts "done"
+        break
+      else
+        #puts "going"
+      end
     end
 
     props.each do |k,v|
@@ -478,11 +487,18 @@ class FilterDecodeNTPReply
               #u_int32 daddr;     /* destination host address */
               #u_int32 flags;     /* flags about destination */
               #u_short port;      /* port number of last reception */
-
-              firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data[idx, 30].unpack("NNNNNNNn")
-              remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")
-              idx += info['ntp.mode7.data_item_size']
+              data_block = data[idx, 30]
+              # Occasionally not all of data captured, need to defensively handle this case.
+              if data_block
+                firsttime,lasttime,restr,count,raddr,laddr,flags,dport = data_block.unpack("NNNNNNNn")
+                # even if data_block is not nil, might not have all of the 30 bytes of data, so make sure
+                # that remote and local address are non-nil.
+                remote_addresses << [raddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".") if raddr
+                local_addresses << [laddr].pack("N").unpack("C*").map{|x| x.to_s }.join(".")  if laddr
+                idx += info['ntp.mode7.data_item_size']
+              else
+                break
+              end
             end
 
             info['ntp.monlist.remote_addresses'] = remote_addresses.join(' ')
@@ -503,6 +519,54 @@ class FilterDecodeNTPReply
     info
   end
 end
+#
+  class FilterDecodePortmapperReply
+    include BaseDecoder
+    ID_TO_PROTOCOL = {
+        0=>"ip",           1=>"icmp",        2=>"igmp",              3=>"ggp",
+        4=>"ipencap",      5=>"st",          6=>"tcp",               8=>"egp",
+        9=>"igp",          12=>"pup",        17=>"udp",              20=>"hmp",
+        22=>"xns-idp",     27=>"rdp",        29=>"iso-tp4",          33=>"dccp",
+        36=>"xtp",         37=>"ddp",        38=>"idpr-cmtp",        41=>"ipv6",
+        43=>"ipv6-route",  44=>"ipv6-frag",  45=>"idrp",             46=>"rsvp",
+        47=>"gre",         50=>"esp",        51=>"ah",               57=>"skip",
+        58=>"ipv6-icmp",   59=>"ipv6-nonxt", 60=>"ipv6-opts",        73=>"rspf",
+        81=>"vmtp",        88=>"eigrp",      89=>"ospf",             93=>"ax.25",
+        94=>"ipip",        97=>"etherip",    98=>"encap",            103=>"pim",
+        108=>"ipcomp",     112=>"vrrp",      115=>"l2tp",            124=>"isis",
+        132=>"sctp",       133=>"fc",        135=>"mobility-header", 136=>"udplite",
+        137=>"mpls-in-ip", 138=>"manet",     139=>"hip",             140=>"shim6",
+        141=>"wesp",       142=>"rohc"
+    }
+    # returns array of program-version-protocol-port strings for each rpc service
+    def parse_data(data)
+      ret = []
+      # Skip past header that contains no rpc services
+      stripped = data[8..-1]
+      curr_pos = 0
+      has_next = ( !stripped.nil? && stripped.length >= 8 ? stripped[curr_pos,8].to_i(16) : 0 )
+      curr_pos +=8
+      while has_next > 0
+        # See if enough data present for next set of reads.
+        if data.length > curr_pos+40
+          prog_id = stripped[curr_pos,8].to_i(16); curr_pos+=8
+          version = stripped[curr_pos,8].to_i(16); curr_pos += 8
+          proto_id = stripped[curr_pos,8].to_i(16); curr_pos+=8
+          protocol = ID_TO_PROTOCOL[ proto_id ] || "proto-#{proto_id}"
+          port = stripped[curr_pos,8].to_i(16); curr_pos += 8
+          ret << "#{prog_id}-v#{version}-#{protocol}-#{port}" if prog_id > 0
+          has_next = stripped[curr_pos,8].to_i(16); curr_pos += 8
+        else
+          break
+        end
+      end
+      ret
+    end
+
+    def decode(data)
+      { 'rpc_services'=>parse_data(data) }
+    end
+  end
 
 end
 end

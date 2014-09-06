@@ -232,7 +232,7 @@ class FilterSplitComma
     lines = [ ]
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
-        doc[k].to_s.split(/m/).each do |line|
+        doc[k].to_s.split(/,/).each do |line|
           lines << doc.merge({ "#{k}.word" => line })
         end
       end
@@ -330,6 +330,30 @@ class FilterFieldSplitArray
           doc.merge!({ "#{k}.f#{wcount}" => word })
           wcount += 1
         end
+      end
+    end
+   [ doc ]
+  end
+end
+
+class FilterFieldArrayJoinComma
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(v) and doc[v].respond_to?(:each)
+        doc[k] = doc[v].join(",")
+      end
+    end
+   [ doc ]
+  end
+end
+
+class FilterFieldArrayJoinWhitespace
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(v) and doc[v].respond_to?(:each)
+        doc[k] = doc[v].join(" ")
       end
     end
    [ doc ]
