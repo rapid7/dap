@@ -10,6 +10,7 @@ require 'dap/proto/dtls'
 require 'dap/proto/natpmp'
 require 'dap/proto/wdbrpc'
 require 'dap/proto/ipmi'
+require 'dap/proto/mssql'
 require 'dap/utils/oui'
 
 #
@@ -264,6 +265,16 @@ class FilterDecodeMSSQLReply
     data.scan(/([A-Za-z0-9 \.\-_]+?);(.+?);/).each do | var, val|
       info["mssql.#{var.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )}"] = val.encode!( 'UTF-8', invalid: :replace, undef: :replace, replace: '' )
     end
+
+    info
+  end
+end
+
+class FilterDecodeMSSQLVersion
+  include BaseDecoder
+  def decode(data)
+    info = {}
+    info["name"] = Dap::Proto::MSSQL::version_num_to_name(data)
     info
   end
 end
