@@ -451,31 +451,28 @@ class FilterDecodeNTPReply
     ntp_flags = data.slice!(0,1).unpack('C').first
     ntp_version = (ntp_flags & 0b00111000) >> 3
     info['ntp.version'] = ntp_version
+    info['ntp.mode'] = (ntp_flags & 0b00000111)
 
     # NTP 2 & 3 share a common header, so parse those together
     if ntp_version == 2 || ntp_version == 3
-      #     0                   1                   2                   3
-      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      #    |R|M| VN  | Mode|A|  Sequence   | Implementation|   Req Code    |
-      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-      info['ntp.response'] = ntp_flags >> 7
-      info['ntp.more'] = (ntp_flags & 0b01000000) >> 6
-      info['ntp.mode'] = (ntp_flags & 0b00000111)
-      ntp_auth_seq, ntp_impl, ntp_rcode = data.slice!(0,3).unpack('C*')
-      info['ntp.implementation'] = ntp_impl
-      info['ntp.request_code'] = ntp_rcode
-
-      # if it is mode 7, parse that:
-      #     0                   1                   2                   3
-      #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      #    |  Err  | Number of data items  |  MBZ  |   Size of data item   |
-      #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      #    ... data ...
       if info['ntp.mode'] == 7
-        return info if data.size < 4
+        # if it is mode 7, parse that:
+        #     0                   1                   2                   3
+        #     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        #    |R|M| VN  | Mode|A|  Sequence   | Implementation|   Req Code    |
+        #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        #    |  Err  | Number of data items  |  MBZ  |   Size of data item   |
+        #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        #    ... data ...
+
+        return info if data.size < 8
+        info['ntp.response'] = ntp_flags >> 7
+        info['ntp.more'] = (ntp_flags & 0b01000000) >> 6
+        ntp_auth_seq, ntp_impl, ntp_rcode = data.slice!(0,3).unpack('C*')
+        info['ntp.implementation'] = ntp_impl
+        info['ntp.request_code'] = ntp_rcode
         mode7_data = data.slice!(0,4).unpack('n*')
         info['ntp.mode7.err'] = mode7_data.first >> 11
         info['ntp.mode7.data_items_count'] = mode7_data.first & 0b0000111111111111
@@ -518,10 +515,21 @@ class FilterDecodeNTPReply
             info['ntp.monlist.local_addresses.count'] = local_addresses.size
           end
         end
+      elsif info['ntp.mode'] == 6
+        # control responses, supposedly.  abort if there isn't enough to have an empty control response
+        return info if data.size < 12
+        ntp_control_flags = data.slice!(0,1).unpack('C').first
+        info["ntp.control.response"] = ntp_control_flags >> 7
+        info["ntp.control.error"] = (ntp_control_flags & 0b01000000) >> 6
+        info["ntp.control.more"] = (ntp_control_flags & 0b00100000) >> 5
+        info["ntp.control.opcode"] = (ntp_control_flags & 0b00011111)
+        %w(seq status association_id offset count).each do |field|
+          info["ntp.control.#{field}"] = data.slice!(0,2).unpack('C*').first
+        end
+        info["ntp.control.data"] = data # TODO: is this the right format? do we need to only slice ntp.control.count?
       end
     elsif ntp_version == 4
       info['ntp.leap_indicator'] = ntp_flags >> 6
-      info['ntp.mode'] = ntp_flags & 0b00000111
       info['ntp.peer.stratum'], info['ntp.peer.interval'], info['ntp.peer.precision'] = data.slice!(0,3).unpack('C*')
       info['ntp.root.delay'], info['ntp.root.dispersion'], info['ntp.ref_id'] = data.slice!(0,12).unpack('N*')
       info['ntp.timestamp.reference'], info['ntp.timestamp.origin'], info['ntp.timestamp.receive'], info['ntp.timestamp.transmit'] = data.slice!(0,32).unpack('Q*')
