@@ -532,9 +532,12 @@ class FilterDecodeNTPReply
           data.strip!
           data.gsub!(/\r\n/, ' ')
           data.split(/, /).each do |pair|
+            next unless pair =~ /=/
             key, value = pair.split(/=/)
-            value.gsub!(/^['"]/, '')
-            value.gsub!(/['"]$/, '')
+            if value
+              value.gsub!(/^['"]/, '')
+              value.gsub!(/['"]$/, '')
+            end
             info["ntp.control.readvar.#{key}"] = value
           end
         else
