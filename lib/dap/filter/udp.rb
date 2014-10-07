@@ -524,7 +524,7 @@ class FilterDecodeNTPReply
         info["ntp.control.more"] = (ntp_control_flags & 0b00100000) >> 5
         info["ntp.control.opcode"] = (ntp_control_flags & 0b00011111)
         %w(seq status association_id offset count).each do |field|
-          info["ntp.control.#{field}"] = data.slice!(0,2).unpack('C*').first
+          info["ntp.control.#{field}"] = data.slice!(0,2).unpack('n').first
         end
         info["ntp.control.data"] = data # TODO: is this the right format? do we need to only slice ntp.control.count?
       end
