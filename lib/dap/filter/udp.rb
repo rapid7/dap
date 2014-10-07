@@ -526,7 +526,20 @@ class FilterDecodeNTPReply
         %w(seq status association_id offset count).each do |field|
           info["ntp.control.#{field}"] = data.slice!(0,2).unpack('n').first
         end
-        info["ntp.control.data"] = data.slice!(0,info["ntp.control.count"])
+        data = data.slice(0,info["ntp.control.count"])
+        # decode readvar responses
+        if info["ntp.control.opcode"] == 2
+          data.strip!
+          data.gsub!(/\r\n/, ' ')
+          data.split(/, /).each do |pair|
+            key, value = pair.split(/=/)
+            value.gsub!(/^['"]/, '')
+            value.gsub!(/['"]$/, '')
+            info["ntp.control.readvar.#{key}"] = value
+          end
+        else
+          info["ntp.control.data"] = data
+        end
       end
     elsif ntp_version == 4
       info['ntp.leap_indicator'] = ntp_flags >> 6
