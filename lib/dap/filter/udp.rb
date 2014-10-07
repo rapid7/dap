@@ -526,7 +526,7 @@ class FilterDecodeNTPReply
         %w(seq status association_id offset count).each do |field|
           info["ntp.control.#{field}"] = data.slice!(0,2).unpack('n').first
         end
-        info["ntp.control.data"] = data # TODO: is this the right format? do we need to only slice ntp.control.count?
+        info["ntp.control.data"] = data.slice!(0,info["ntp.control.count"])
       end
     elsif ntp_version == 4
       info['ntp.leap_indicator'] = ntp_flags >> 6
