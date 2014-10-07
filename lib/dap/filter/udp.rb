@@ -529,6 +529,7 @@ class FilterDecodeNTPReply
         data = data.slice(0,info["ntp.control.count"])
         # decode readvar responses
         if info["ntp.control.opcode"] == 2
+          info["ntp.control.readvar"] =  data
           data.strip!
           data.gsub!(/\r\n/, ' ')
           data.split(/, /).each do |pair|
