@@ -1,18 +1,18 @@
 require 'oj'
 require 'csv'
-  
+
 
 module Dap
 module Output
 
 
   module FileDestination
-    
+
     attr_accessor :fd
 
     def open(file_name)
       close
-      self.fd = ['-', 'stdout', nil].include?(file_name) ? 
+      self.fd = ['-', 'stdout', nil].include?(file_name) ?
         $stdout : ::File.open(file_name, "wb")
     end
 
@@ -29,6 +29,33 @@ module Output
     def stop
     end
 
+    # String sanitizer for UTF-8
+    def sanitize(o)
+
+      # Handle strings
+      if o.kind_of? ::String
+        return o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
+      end
+
+      # Handle hashes
+      if o.kind_of? ::Hash
+        r = {}
+        o.each_pair do |k,v|
+          k = sanitize(k)
+          v = sanitize(v)
+          r[k] = v
+        end
+        return r
+      end
+
+      # Handle arrays
+      if o.kind_of? ::Array
+        return o.map{|x| sanitize(x) }
+      end
+
+      # Leave as-is
+      o
+    end
   end
 
 
@@ -37,7 +64,7 @@ module Output
   # XXX: Quoted field handling is not supported, CSV should be a new output type
   #
   class OutputLines
-    
+
     attr_accessor :fields, :delimiter
     FIELD_WILDCARD = '_'
 
@@ -47,7 +74,7 @@ module Output
       file = nil
       self.delimiter = ","
       self.fields    = FIELD_WILDCARD
-      
+
       header = false
 
       args.each do |str|
@@ -60,7 +87,7 @@ module Output
         when 'fields'
           self.fields = v.split(',')
         when 'delimiter'
-          self.delimiter = 
+          self.delimiter =
             case v.to_s
             when 'tab'
               "\t"
@@ -85,11 +112,11 @@ module Output
 
       if self.fields.include?(FIELD_WILDCARD)
         doc.each_pair do |k,v|
-          out << v.to_s
+          out << sanitize(v.to_s)
         end
       else
         self.fields.each do |k|
-          out << doc[k].to_s
+          out << sanitize(doc[k].to_s)
         end
       end
 
@@ -105,32 +132,15 @@ module Output
   # JSON Output (line-delimited records)
   #
   class OutputJSON
-    
-    include FileDestination
 
-    def stringify(o)
-      if o.kind_of?( ::String )
-        o.to_s.encode(o.encoding, "UTF-8", :invalid => :replace, :undef => :replace, :replace => '')
-      else
-        o.to_s
-      end
-    end
+    include FileDestination
 
     def initialize(args)
       self.open(args.first)
     end
 
     def write_record(doc)
-      ndoc = {}
-      doc.each_pair do |k,v|
-        k = stringify(k)
-        if v.kind_of?(::String)
-          ndoc[k] = stringify(v)
-        else
-          ndoc[k] = v
-        end
-      end
-      self.fd.puts Oj.dump(ndoc)
+      self.fd.puts Oj.dump(sanitize(doc))
       self.fd.flush
     end
 
@@ -141,7 +151,7 @@ module Output
   # CSV Output
   #
   class OutputCSV
-    
+
     attr_accessor :fields, :delimiter
     FIELD_WILDCARD = '_'
 
@@ -151,7 +161,7 @@ module Output
       file = nil
       self.delimiter = ","
       self.fields    = FIELD_WILDCARD
-      
+
       header = false
 
       args.each do |str|
@@ -164,7 +174,7 @@ module Output
         when 'fields'
           self.fields = v.split(',')
         when 'delimiter'
-          self.delimiter = 
+          self.delimiter =
             case v.to_s
             when 'tab'
               "\t"
@@ -188,11 +198,11 @@ module Output
 
       if self.fields.include?(FIELD_WILDCARD)
         doc.each_pair do |k,v|
-          out << v.to_s
+          out << sanitize(v.to_s)
         end
       else
         self.fields.each do |k|
-          out << doc[k].to_s
+          out << sanitize(doc[k].to_s)
         end
       end
 
