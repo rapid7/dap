@@ -370,9 +370,9 @@ class FilterDigest
       if doc.has_key?(k)
         case v
         when 'sha1'
-          doc["#{k}.sha1"] = Digest::SHA1.hexdigest(doc[k])
+          doc["#{k}.sha1"] = Digest::SHA1.hexdigest(doc[k].to_s)
         when 'md5'
-          doc["#{k}.md5"] = Digest::MD5.hexdigest(doc[k])
+          doc["#{k}.md5"] = Digest::MD5.hexdigest(doc[k].to_s)
         end
       end
     end
