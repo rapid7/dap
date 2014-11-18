@@ -1,3 +1,6 @@
+require 'digest/sha1'
+require 'digest/md5'
+
 module Dap
 module Filter
 
@@ -354,6 +357,23 @@ class FilterFieldArrayJoinWhitespace
     self.opts.each_pair do |k,v|
       if doc.has_key?(v) and doc[v].respond_to?(:each)
         doc[k] = doc[v].join(" ")
+      end
+    end
+   [ doc ]
+  end
+end
+
+class FilterDigest
+  include Base
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        case v
+        when 'sha1'
+          doc["#{k}.sha1"] = Digest::SHA1.hexdigest(doc[k])
+        when 'md5'
+          doc["#{k}.md5"] = Digest::MD5.hexdigest(doc[k])
+        end
       end
     end
    [ doc ]
