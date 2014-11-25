@@ -37,10 +37,11 @@ module Input
       res = {}
       line = self.fd.readline rescue nil
       return Error::EOF unless line
+      line.force_encoding('BINARY')
 
       # Short-circuit the slow CSV parser if the data does not contain double quotes
-      arr = line.index('"') ? 
-        ( CSV.parse(line) rescue nil ) : 
+      arr = line.index('"') ?
+        ( CSV.parse(line) rescue nil ) :
         [ line.split(',').map{|x| x.strip } ]
 
       return Error::Empty unless arr
