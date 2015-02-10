@@ -28,7 +28,7 @@ GEM
     nokogiri (1.6.3.1)
       mini_portile (= 0.6.0)
     oj (2.10.2)
-    recog (0.02)
+    recog (1.0.15)
       nokogiri
     rspec (3.1.0)
       rspec-core (~> 3.1.0)
@@ -55,5 +55,5 @@ DEPENDENCIES
   net-dns
   nokogiri
   oj
-  recog
+  recog (>= 1.0.15)
   rspec (~> 3.1.0)

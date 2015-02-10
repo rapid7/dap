@@ -6,7 +6,7 @@ gem 'htmlentities'
 gem 'net-dns'
 gem 'bit-struct'
 gem 'geoip-c'
-gem 'recog'
+gem 'recog', '>=1.0.15'
 
 group :test do
   gem 'rspec', '~> 3.1.0'
