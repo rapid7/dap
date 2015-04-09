@@ -104,10 +104,13 @@ class FilterVulnMatchHTTP
       return []
     end
 
-    out = ['VULN-ELASTICSEARCH-RCE']
+    out = ['VULN-ELASTICSEARCH-RCE', 'CVE-2014-3120']
     if (input.match("Runtime") and input.match("getRuntime()")) or
-      (input.match("FileOutputStream") and input.match("URLClassLoader"))
-      out += ['CVE-2014-3120']
+      out += ["EXEC-SHELLCMD"]
+    end
+
+    if input.match("FileOutputStream") and input.match("URLClassLoader")
+      out += ["EXEC-JAVA-CLASS"]
     end
 
     if input.match("getDeclaredConstructor")
