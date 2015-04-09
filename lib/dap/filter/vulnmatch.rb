@@ -64,5 +64,99 @@ class FilterVulnMatchMSSQL
   end
 end
 
+class FilterVulnMatchHTTP
+  include Base
+  include BaseVulnMatch
+
+  def check_shellshock(doc)
+    if not doc["http.headers"]
+      return []
+    end
+
+    h = doc["http.headers"]
+    sspattern = /\(\)\s*{\s*:;\s*};/
+
+    if h["user-agent"] and h["user-agent"] =~ sspattern
+      return ['VULN-SHELLSHOCK', 'CVE-2014-6271']
+    end
+
+    if h["referrer"] and h["referrer"] =~ sspattern
+      return ['VULN-SHELLSHOCK', 'CVE-2014-6271']
+    end
+
+    return []
+  end
+
+  def check_elastic(doc)
+    if not doc['http.path']
+      return []
+    end
+    if not doc['http.path'] == '/_search'
+      return []
+    end
+
+    input = doc['http.query']
+    if doc['http.method'] == "POST"
+      input = doc['http.body']
+    end
+
+    if not input.match("script_fields")
+      return []
+    end
+
+    out = ['VULN-ELASTICSEARCH-RCE']
+    if (input.match("Runtime") and input.match("getRuntime()")) or
+      (input.match("FileOutputStream") and input.match("URLClassLoader"))
+      out += ['CVE-2014-3120']
+    end
+
+    if input.match("getDeclaredConstructor")
+      out += ['CVE-2015-1427']
+    end
+
+    if input.match("metasploit.Payload")
+      out += ['METASPLOIT']
+    end
+
+    return out
+  end
+
+  def process(doc)
+    if not doc['vulnerability']
+      doc['vulnerability'] = []
+    end
+
+    doc['vulnerability'] |= check_elastic(doc)
+    doc['vulnerability'] |= check_shellshock(doc)
+
+    # see vulndb.rb, allows for simple matches to be added quickly
+    SEARCHES[:http].each do | entry |
+      success = true
+
+      # all matches must go through
+      entry[:match].each do | k, v |
+        if not doc[k]
+          success = false
+        else
+          m = doc[k].match(v)
+          if not m
+            success = false
+          end
+        end
+
+        if not success
+          break
+        end
+      end
+
+      if success
+        doc['vulnerability'] |= entry[:cve]
+      end
+    end
+
+    [ doc ]
+  end
+end
+
 end
 end

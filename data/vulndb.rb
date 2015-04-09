@@ -80,4 +80,37 @@ SEARCHES = {
             ['7.0', 'sp4'] => ['CVE-2003-0230', 'CVE-2003-0231', 'CVE-2003-0232', 'CVE-2004-1560', 'CVE-2008-0085', 'CVE-2008-0086', 'CVE-2008-0106', 'CVE-2008-0107'],
         }
     }],
+
+    :http => [
+    #### ELASTICSEARCH RCE
+    {
+        # direct shellcommand elastic rce
+        :match => [
+            ['http.path', '/_search'],
+            ['http.body', 'script_fields'],
+            ['http.body', 'java.lang.Runtime'],
+            ['http.body', 'getRuntime()'],
+        ],
+        :cve => ['VULN-ELASTICSEARCH-RCE', 'CVE-2014-3120']
+    },{
+        # this just adds another tag as it's most likely done with metasploit
+        :match => [
+            ['http.path', '/_search'],
+            ['http.body', 'script_fields'],
+            ['http.body', 'metasploit.Payload'],
+        ],
+        :cve => ['VULN-ELASTICSEARCH-RCE', 'METASPLOIT']
+    }] + [
+    #### PHP CGI
+    {
+        :match => [
+            ['http.path', '/cgi-bin/php'],
+        ],
+        :cve => ['VULN-PHPCGI']
+    },{
+        :match => [
+            ['http.path', '/cgi-bin/authLogin.cgi'],
+        ],
+        :cve => ['VULN-QNAP-SHELLSHOCK']
+    }],
 }
