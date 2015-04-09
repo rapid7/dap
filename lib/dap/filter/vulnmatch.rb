@@ -122,12 +122,13 @@ class FilterVulnMatchHTTP
   end
 
   def process(doc)
-    if not doc['vulnerability']
-      doc['vulnerability'] = []
+    vulns = []
+    if doc['vulnerability']
+      vulns |= doc['vulnerability']
     end
 
-    doc['vulnerability'] |= check_elastic(doc)
-    doc['vulnerability'] |= check_shellshock(doc)
+    vulns |= check_elastic(doc)
+    vulns |= check_shellshock(doc)
 
     # see vulndb.rb, allows for simple matches to be added quickly
     SEARCHES[:http].each do | entry |
@@ -150,8 +151,12 @@ class FilterVulnMatchHTTP
       end
 
       if success
-        doc['vulnerability'] |= entry[:cve]
+        vulns |= entry[:cve]
       end
+    end
+
+    if vulns
+      doc['vulnerability'] = vulns
     end
 
     [ doc ]
