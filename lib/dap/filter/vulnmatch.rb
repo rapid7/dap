@@ -105,7 +105,7 @@ class FilterVulnMatchHTTP
     end
 
     out = ['VULN-ELASTICSEARCH-RCE', 'CVE-2014-3120']
-    if (input.match("Runtime") and input.match("getRuntime()")) or
+    if input.match("Runtime") and input.match("getRuntime()")
       out += ["EXEC-SHELLCMD"]
     end
 
