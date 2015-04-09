@@ -95,7 +95,7 @@ class FilterVulnMatchHTTP
       return []
     end
 
-    input = doc['http.query']
+    input = doc['http.url']
     if doc['http.method'] == "POST"
       input = doc['http.body']
     end
@@ -155,7 +155,7 @@ class FilterVulnMatchHTTP
       end
     end
 
-    if vulns
+    if vulns != []
       doc['vulnerability'] = vulns
     end
 
