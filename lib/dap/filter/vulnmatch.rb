@@ -166,5 +166,35 @@ class FilterVulnMatchHTTP
   end
 end
 
+class FilterGenericSetMatch
+  include Base
+  attr_accessor :matchset
+
+  def initialize(args)
+    self.opts = {}
+    args.each do |arg|
+        k,v = arg.split("=", 2)
+        self.opts[k] = v
+    end
+    self.name = Dap::Factory.name_from_class(self.class)
+
+    fail "Expected key and set arguments to #{self.name} but got #{self.opts}" unless self.opts.has_key?("key") and self.opts.has_key?("set")
+
+    self.matchset = {}
+    File.readlines(self.opts["set"]).each do |line|
+      self.matchset[line.chomp] = nil
+    end
+  end
+
+  def process(doc)
+    if doc.has_key?(self.opts["key"])
+      if self.matchset.has_key?(doc[self.opts["key"]])
+        return [ doc ]
+      end
+    end
+    [ ]
+  end
+end
+
 end
 end
