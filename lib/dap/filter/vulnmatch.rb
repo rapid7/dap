@@ -188,8 +188,16 @@ class FilterGenericSetMatch
 
   def process(doc)
     if doc.has_key?(self.opts["key"])
-      if self.matchset.has_key?(doc[self.opts["key"]])
-        return [ doc ]
+      if doc[self.opts["key"]].kind_of?(Array)
+        doc[self.opts["key"]].each do |val|
+          if self.matchset.has_key?(val)
+            return [ doc ]
+          end
+        end
+      else
+        if self.matchset.has_key?(doc[self.opts["key"]])
+          return [ doc ]
+        end
       end
     end
     [ ]
