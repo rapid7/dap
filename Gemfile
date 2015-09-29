@@ -1,6 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'nokogiri'
 gem 'oj'
 gem 'htmlentities'
 gem 'net-dns'
