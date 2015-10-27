@@ -5,6 +5,7 @@ require 'dap/version'
 Gem::Specification.new do |s|
   s.name        = 'dap'
   s.version     = Dap::VERSION
+  s.required_ruby_version = '>= 2.1'
   s.authors     = [
       'Rapid7 Research'
   ]
@@ -14,9 +15,9 @@ Gem::Specification.new do |s|
   s.homepage    = "https://www.github.com/rapid7/dap"
   s.summary     = %q{DAP: The Data Analysis Pipeline}
   s.description = %q{
-    DAP reads data using an input plugin, transforms it through a series of filters, and prints it out again 
-    using an output plugin. Every record is treated as a document (aka: hash/dict) and filters are used to 
-    reduce, expand, and transform these documents as they pass through. Think of DAP as a mashup between 
+    DAP reads data using an input plugin, transforms it through a series of filters, and prints it out again
+    using an output plugin. Every record is treated as a document (aka: hash/dict) and filters are used to
+    reduce, expand, and transform these documents as they pass through. Think of DAP as a mashup between
     sed, awk, grep, csvtool, and jq, with map/reduce capabilities.
   }.gsub(/\s+/, ' ').strip
 
