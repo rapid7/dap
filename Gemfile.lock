@@ -53,7 +53,6 @@ DEPENDENCIES
   geoip-c
   htmlentities
   net-dns
-  nokogiri
   oj
   recog (>= 2.0)
   rspec (~> 3.1.0)

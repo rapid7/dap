@@ -2,11 +2,62 @@ module Dap
 module Filter
 
 require 'htmlentities'
-require 'nokogiri'
+require 'shellwords'
 require 'uri'
+
+# Dirty element extractor, works around memory issues with Nokogiri
+module HTMLGhetto
+  def extract_elements(data)
+    @coder ||= HTMLEntities.new
+    res = []
+    data.
+      to_s.
+      encode('UTF-8', invalid: :replace, undef: :replace, replace: '').
+      scan(/<([^>]+)>/m).each do |e|
+
+      e = e.first
+
+      # Skip closing tags
+      next if e[0,1] == "/"
+
+      # Get the name vs attributes
+      name, astr = e.split(/\s+/, 2).map{|x| x.to_s }
+      astr ||= ''
+
+      # Skip non-alpha elements
+      next unless name =~ /^[a-zA-Z]/
+
+      # Convert newlines to spaces & strip trailing />
+      astr = astr.gsub(/\n/, ' ').sub(/\/$/, '')
+
+      o = { name: name }
+
+      begin
+       Shellwords.shellwords(astr).each do |attr_str|
+          aname, avalue = attr_str.split('=', 2).map{|x| x.to_s.strip }
+          avalue = avalue.to_s.gsub(/^\"|"$/, '')
+          o[aname] = @coder.decode(avalue)
+        end
+      rescue ::Interrupt
+        raise $!
+      rescue ::Exception
+        # If shellwords couldn't parse it, split on space instead
+        astr.to_s.split(/\s+/).each do |attr_str|
+          aname, avalue = attr_str.split('=', 2).map{|x| x.to_s.strip }
+          avalue = avalue.to_s.gsub(/^\"|"$/, '')
+          o[aname] = @coder.decode(avalue)
+        end
+      end
+      res << o
+    end
+
+    res
+  end
+end
 
 class FilterHTMLIframes
   include Base
+  include HTMLGhetto
 
   def process(doc)
     out = []
@@ -20,25 +71,11 @@ class FilterHTMLIframes
   end
 
   def extract(data)
-    @coder ||= HTMLEntities.new
-    urls = []
-
-    data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-    html = nil
-    begin
-      html = Nokogiri::HTML(data) do |conf|
-        conf.strict.noent
-      end
-    rescue ::Exception
-      return urls
-    end
-
-    html.xpath('//iframe').each do |e|
+    extract_elements(data).select{|x| x[:name] == 'iframe'}.each do |e|
       url = e['src']
-      next unless url
+      next unless (url && url.length > 0)
       urls << url
     end
-
     urls
   end
 end
@@ -46,6 +83,7 @@ end
 
 class FilterHTMLLinks
   include Base
+  include HTMLGhetto
 
   def process(doc)
     out = []
@@ -61,20 +99,10 @@ class FilterHTMLLinks
   def extract(data)
     urls = []
 
-    data = data.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-    html = nil
-    begin
-      html = Nokogiri::HTML(data) do |conf|
-        conf.strict.noent
-      end
-    rescue ::Exception
-     return urls
-    end
-
-    html.xpath('//*').each do |e|
+    extract_elements(data).each do |e|
       url = e['href'] || e['src']
-      next unless url
-      urls << { 'link' => url, 'element' => e.name }
+      next unless (url && url.length > 0)
+      urls << { 'link' => url, 'element' => e[:name] }
     end
 
     urls
@@ -136,14 +164,14 @@ class FilterDecodeHTTPReply
       when /^Date:\s*(.*)/i
         d = DateTime.parse($1.strip) rescue nil
         save["http_date"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
-          
+
       when /^Last-modified:\s*(.*)/i
         d = DateTime.parse($1.strip) rescue nil
         save["http_modified"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
 
       when /^Location:\s*(.*)/i
-        save["http_location"] = $1.strip  
-      
+        save["http_location"] = $1.strip
+
       when /^WWW-Authenticate:\s*(.*)/i
         save["http_auth"] = $1.strip
 
@@ -159,7 +187,7 @@ class FilterDecodeHTTPReply
     end
 
     head, body = data.split(/\r?\n\r?\n/, 2)
-    
+
     # Some buggy systems exclude the header entirely
     body ||= head
 
