@@ -11,6 +11,8 @@ RUN apt-get install -y \
   libffi-dev \
   libgeoip-dev
 
+RUN apt-get install -y libxml2-dev zlib1g-dev
+
 RUN gem install bundler
 
 RUN cd /opt && git clone https://github.com/rapid7/dap.git dap && \
