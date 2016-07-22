@@ -9,7 +9,7 @@ class LDAP
   #    https://blogs.oracle.com/directorymanager/entry/a_quick_introduction_to_asn
   #
   # @param data [String] Binary string containing ASN1 element(s)
-  # @return [Integer] Total length of of the ASN1 element
+  # @return [Fixnum] Total length of of the ASN1 element
   #
   def self.decode_elem_length(data)
     return unless data.length > 2
@@ -23,14 +23,14 @@ class LDAP
     if length > 127
       # Length will take more than one byte to store
       len_bytes = length - 128
-      if data.length > len_bytes + 2
-        if len_bytes == 2
-          length = data.byteslice(2, len_bytes).unpack('S>')[0]
-        else
-          length = data.byteslice(2, len_bytes).unpack('L>')[0]
-        end
-        elem_start += len_bytes
+      return unless data.length > len_bytes + 2
+
+      if len_bytes == 2
+        length = data.byteslice(2, len_bytes).unpack('S>')[0]
+      else
+        length = data.byteslice(2, len_bytes).unpack('L>')[0]
       end
+      elem_start += len_bytes
     end
 
     elem_start + length
@@ -65,7 +65,7 @@ class LDAP
   # Parse an LDAP SearchResult entry.
   #
   # @param data [OpenSSL::ASN1::ASN1Data] LDAP message to parse
-  # @return [Hash] Hash containing
+  # @return [Array] Array containing
   #   result_type - Message type (SearchResultEntry, SearchResultDone, etc.)
   #   results     - Hash containing nested decoded LDAP response
   #
@@ -104,6 +104,10 @@ class LDAP
       results['resultCode'] = data.value[1].value[0].value.to_i if data.value[1].value[0].value
       results['resultMatchedDN'] = data.value[1].value[1].value if data.value[1].value[1].value
       results['resultdiagMessage'] = data.value[1].value[2].value if data.value[1].value[2].value
+    else
+      # Unhandled tag
+      result_type = 'UnhandledTag'
+      results['tagNumber'] = data.value[1].tag.to_i if data.value[1].tag
     end
 
     [result_type, results]
