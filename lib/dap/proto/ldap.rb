@@ -64,15 +64,22 @@ class LDAP
   #
   # Parse an LDAP SearchResult entry.
   #
-  # @param data [OpenSSL::ASN1::ASN1Data] LDAP message to parse
+  # @param data [OpenSSL::ASN1::Sequence] LDAP message to parse
   # @return [Array] Array containing
   #   result_type - Message type (SearchResultEntry, SearchResultDone, etc.)
   #   results     - Hash containing nested decoded LDAP response
   #
   def self.parse_message(data)
     # RFC 4511 - Section 4.5.2
+
     results = {}
     result_type = ''
+
+    unless data.class == OpenSSL::ASN1::Sequence
+      result_type = 'Error'
+      results['errorMessage'] = 'parse_message: Message is not of type OpenSSL::ASN1::Sequence'
+      return [result_type, results]
+    end
 
     if data.value[1].tag == 4
       # SearchResultEntry found..

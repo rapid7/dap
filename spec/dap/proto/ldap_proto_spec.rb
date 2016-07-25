@@ -1,9 +1,9 @@
-require 'openssl'
-require_relative '../../../lib/dap/proto/ldap'
-
 module Dap
 module Proto
 class LDAP
+
+require 'openssl'
+require_relative '../../../lib/dap/proto/ldap'
 
 describe Dap::Proto::LDAP do
   subject { described_class }
