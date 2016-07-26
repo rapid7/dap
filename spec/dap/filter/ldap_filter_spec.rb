@@ -7,7 +7,7 @@ require 'dap'
 require 'dap/filter/base'
 require 'dap/filter/ldap'
 
-describe Dap::Filter do
+describe Dap::Filter::FilterDecodeLdapSearchResult do
   describe '.decode' do
 
     original = ['3030020107642b040030273025040b6f626a656374436c61'\
@@ -43,21 +43,14 @@ describe Dap::Filter do
 
     context 'testing invalid ldap response message' do
       let(:decode) { filter.decode('303030303030') }
-      it 'returns nil as expected' do
-        expect(decode).to eq(nil)
+      it 'returns error message as expected' do
+        test_val = { 'Error' => {
+                       'errorMessage' =>
+                       'FilterDecodeLdapSearchResult - Unable to parse response' } }
+        expect(decode).to eq(test_val)
       end
-
-    end
-
-    context 'testing short message' do
-      let(:decode) { filter.decode('3030') }
-      it 'returns nil as expected' do
-        expect(decode).to eq(nil)
-      end
-
     end
   end
-
 end
 
 end

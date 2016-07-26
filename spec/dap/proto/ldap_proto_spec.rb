@@ -3,7 +3,7 @@ module Proto
 class LDAP
 
 require 'openssl'
-require_relative '../../../lib/dap/proto/ldap'
+require 'dap/proto/ldap'
 
 describe Dap::Proto::LDAP do
   subject { described_class }
@@ -66,6 +66,20 @@ describe Dap::Proto::LDAP do
 
       it 'returns SearchResultDone value as expected' do
         expect(split_messages[1].unpack('H*')).to eq(done)
+      end
+    end
+
+    context 'testing invalid message' do
+      let(:split_messages) { subject.split_messages('FF') }
+      it 'returns Array as expected' do
+        expect(split_messages.class).to eq(::Array)
+      end
+    end
+
+    context 'testing short message' do
+      let(:split_messages) { subject.split_messages('00') }
+      it 'returns Array as expected' do
+        expect(split_messages.class).to eq(::Array)
       end
     end
   end

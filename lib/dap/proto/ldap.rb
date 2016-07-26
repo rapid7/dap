@@ -9,7 +9,7 @@ class LDAP
   #    https://blogs.oracle.com/directorymanager/entry/a_quick_introduction_to_asn
   #
   # @param data [String] Binary string containing ASN1 element(s)
-  # @return [Fixnum] Total length of of the ASN1 element
+  # @return [Fixnum, nil] Total length of of the ASN1 element, nil on error
   #
   def self.decode_elem_length(data)
     return unless data.length > 2
@@ -43,13 +43,13 @@ class LDAP
   # @return [Array] Array of binary strings containing ASN1 elements
   #
   def self.split_messages(data)
-    return unless data.length > 2
-    pos = 0
     messages = []
+    return messages unless data.length > 2
+    pos = 0
     while pos < data.length
-      return unless data.byteslice(pos) == '0'
+      break unless data.byteslice(pos) == '0'
       elem_len = Dap::Proto::LDAP.decode_elem_length(data.byteslice(pos..data.length - 1))
-      return unless elem_len
+      break unless elem_len
 
       # Sanity check and then carve out the current element
       if data.length >= elem_len + pos
@@ -72,8 +72,8 @@ class LDAP
   def self.parse_message(data)
     # RFC 4511 - Section 4.5.2
 
-    results = {}
     result_type = ''
+    results = {}
 
     unless data.class == OpenSSL::ASN1::Sequence
       result_type = 'Error'
