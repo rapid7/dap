@@ -1,10 +1,3 @@
-module Dap
-module Proto
-class LDAP
-
-require 'openssl'
-require 'dap/proto/ldap'
-
 describe Dap::Proto::LDAP do
   subject { described_class }
 
@@ -146,8 +139,4 @@ describe Dap::Proto::LDAP do
 
   end
 
-end
-
-end
-end
 end

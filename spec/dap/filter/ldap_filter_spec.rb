@@ -1,12 +1,3 @@
-module Dap
-module Filter
-class FilterDecodeLdapSearchResult
-
-require 'openssl'
-require 'dap'
-require 'dap/filter/base'
-require 'dap/filter/ldap'
-
 describe Dap::Filter::FilterDecodeLdapSearchResult do
   describe '.decode' do
 
@@ -16,7 +7,7 @@ describe Dap::Filter::FilterDecodeLdapSearchResult do
 
     data = original.pack('H*')
 
-    let(:filter) { FilterDecodeLdapSearchResult.new(['data']) }
+    let(:filter) { described_class.new(['data']) }
 
     context 'testing full ldap response message' do
       let(:decode) { filter.decode(data) }
@@ -51,8 +42,4 @@ describe Dap::Filter::FilterDecodeLdapSearchResult do
       end
     end
   end
-end
-
-end
-end
 end
