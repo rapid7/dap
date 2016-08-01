@@ -18,6 +18,7 @@ describe Dap::Filter::FilterDecodeLdapSearchResult do
       it 'returns expected value' do
         test_val = { 'SearchResultDone' => {
                        'resultCode' => 0,
+                       'resultDesc' => 'success',
                        'resultMatchedDN' => '',
                        'resultdiagMessage' => ''
                    },

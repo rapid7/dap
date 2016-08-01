@@ -2,6 +2,30 @@ module Dap
 module Proto
 class LDAP
 
+  # LDAPResult element resultCode lookup
+  #   Reference: https://tools.ietf.org/html/rfc4511#section-4.1.9
+  RESULT_DESC = {
+    0 => 'success',
+    1 => 'operationsError',
+    2 => 'protocolError',
+    3 => 'timeLimitExceeded',
+    4 => 'sizeLimitExceeded',
+    7 => 'authMethodNotSupported',
+    8 => 'strongerAuthRequired',
+    10 => 'referral',
+    11 => 'adminLimitExceeded',
+    12 => 'unavailableCriticalExtension',
+    13 => 'confidentialityRequired',
+    14 => 'saslBindInProgress',
+    32 => 'noSuchObject',
+    43 => 'invalidDNSyntax',
+    48 => 'inappropriateAuthentication',
+    49 => 'invalidCredentials',
+    50 => 'insufficientAccessRights',
+    51 => 'busy',
+    52 => 'unavailable',
+    53 => 'unwillingToPerform',
+  }
 
   #
   # Parse ASN1 element and extract the length.
@@ -25,8 +49,15 @@ class LDAP
       len_bytes = length - 128
       return unless data.length > len_bytes + 2
 
-      if len_bytes == 2
+      if len_bytes == 1
+        length = data.byteslice(2, len_bytes).unpack('C')[0]
+      elsif len_bytes == 2
         length = data.byteslice(2, len_bytes).unpack('S>')[0]
+      elsif len_bytes == 3
+        a, b, c = data.byteslice(2, len_bytes).unpack('CCC')
+        a = a << 16
+        b = b << 8
+        length = a + b + c
       else
         length = data.byteslice(2, len_bytes).unpack('L>')[0]
       end
@@ -62,6 +93,49 @@ class LDAP
   end
 
   #
+  # Parse an LDAPResult (not SearchResult) ASN.1 structure
+  #   Reference:  https://tools.ietf.org/html/rfc4511#section-4.1.9
+  #
+  # @param data [OpenSSL::ASN1::ASN1Data] LDAPResult structure
+  # @return [Hash] Hash containing decoded LDAP response
+  #
+  def self.parse_ldapresult(ldap_result)
+    results = {}
+
+    # Sanity check the result code element
+    if ldap_result.value[0] && ldap_result.value[0].value
+      code_elem = ldap_result.value[0]
+      return results unless code_elem.tag == 10 && code_elem.tag_class == :UNIVERSAL
+      results['resultCode'] = code_elem.value.to_i
+    end
+
+    # These are probably safe if the resultCode validates
+    results['resultDesc'] = RESULT_DESC[ results['resultCode'] ] if results['resultCode']
+    results['resultMatchedDN'] = ldap_result.value[1].value if ldap_result.value[1] && ldap_result.value[1].value
+    results['resultdiagMessage'] = ldap_result.value[2].value if ldap_result.value[2] && ldap_result.value[2].value
+
+    # Handle optional elements that may be returned by certain
+    # LDAP application messages
+    ldap_result.value.each do |element|
+      next unless element.tag_class && element.tag && element.value
+      next unless element.tag_class == :CONTEXT_SPECIFIC
+
+      case element.tag
+      when 3
+        results['referral'] = element.value
+      when 7
+        results['serverSaslCreds'] = element.value
+      when 10
+        results['responseName'] = element.value
+      when 11
+        results['responseValue'] = element.value
+      end
+    end
+
+    results
+  end
+
+  #
   # Parse an LDAP SearchResult entry.
   #
   # @param data [OpenSSL::ASN1::Sequence] LDAP message to parse
@@ -88,29 +162,73 @@ class LDAP
         results['objectName'] = data.value[1].value[0].value
       end
 
-      attrib_hash = {}
+      if data.value[1].value[1]
+        attrib_hash = {}
 
-      # Handle PartialAttributeValues
-      data.value[1].value[1].each do |partial_attrib|
+        # Handle PartialAttributeValues
+        data.value[1].value[1].each do |partial_attrib|
 
-        value_array = []
-        attrib_type = partial_attrib.value[0].value
+          value_array = []
+          attrib_type = partial_attrib.value[0].value
 
-        partial_attrib.value[1].each do |part_attrib_value|
-          value_array.push(part_attrib_value.value)
+          partial_attrib.value[1].each do |part_attrib_value|
+            value_array.push(part_attrib_value.value)
+          end
+
+          attrib_hash[attrib_type] = value_array
         end
 
-        attrib_hash[attrib_type] = value_array
+        results['PartialAttributes'] = attrib_hash
       end
 
-      results['PartialAttributes'] = attrib_hash
-
-    elsif data.value[1].tag == 5
+    elsif data.value[1] && data.value[1].tag == 5
       # SearchResultDone found..
       result_type = 'SearchResultDone'
-      results['resultCode'] = data.value[1].value[0].value.to_i if data.value[1].value[0].value
-      results['resultMatchedDN'] = data.value[1].value[1].value if data.value[1].value[1].value
-      results['resultdiagMessage'] = data.value[1].value[2].value if data.value[1].value[2].value
+      ldap_result = data.value[1]
+
+      if ldap_result.value[0] && ldap_result.value[0].class == OpenSSL::ASN1::Sequence
+        # Encoding of the SearchResultDone seems to vary, this is RFC format
+        # of an LDAPResult ASN.1 structure in which the data is contained in a
+        # Sequence
+        results = parse_ldapresult(ldap_result.value[0])
+      elsif ldap_result.value[0]
+        # LDAPResult w/o outer Sequence wrapper, used by MS Windows
+        results = parse_ldapresult(ldap_result)
+      end
+      if data.value[2] && data.value[2].tag == 10
+        # Unknown structure for providing a response, looks like LDAPResult
+        # but placed at a higher level in the response, salvage what we can..
+        results['resultCode'] = data.value[2].value.to_i if data.value[2].value
+        results['resultDesc'] = RESULT_DESC[ results['resultCode'] ] if results['resultCode']
+        results['resultMatchedDN'] = data.value[3].value if data.value[3] && data.value[3].value
+        results['resultdiagMessage'] = data.value[4].value if data.value[4] && data.value[4].value
+      end
+
+    elsif data.value[1] && data.value[1].tag == 1
+      result_type = 'BindResponse'
+      results = parse_ldapresult(data.value[1])
+
+    elsif data.value[1] && data.value[1].tag == 2
+      result_type = 'UnbindRequest'
+
+    elsif data.value[1] && data.value[1].tag == 3
+      # There is no legitimate use of application tag 3
+      # in this context per RFC 4511. Try to figure
+      # out what the intent is.
+      resp_data = data.value[1]
+      if resp_data.value[0].tag == 10 && resp_data.value[2].tag == 4
+        # Probably an incorrectly tagged BindResponse
+        result_type = 'BindResponse'
+        results = parse_ldapresult(resp_data)
+      else
+        result_type = 'UnhandledTag'
+        results['tagNumber'] = data.value[1].tag.to_i if data.value[1].tag
+      end
+
+    elsif data.value[1] && data.value[1].tag == 24
+      result_type = 'ExtendedResponse'
+      results = parse_ldapresult(data.value[1])
+
     else
       # Unhandled tag
       result_type = 'UnhandledTag'
