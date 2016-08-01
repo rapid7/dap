@@ -49,18 +49,15 @@ class LDAP
       len_bytes = length - 128
       return unless data.length > len_bytes + 2
 
-      if len_bytes == 1
-        length = data.byteslice(2, len_bytes).unpack('C')[0]
-      elsif len_bytes == 2
-        length = data.byteslice(2, len_bytes).unpack('S>')[0]
-      elsif len_bytes == 3
-        a, b, c = data.byteslice(2, len_bytes).unpack('CCC')
-        a = a << 16
-        b = b << 8
-        length = a + b + c
-      else
-        length = data.byteslice(2, len_bytes).unpack('L>')[0]
+      # This shouldn't happen...
+      return unless len_bytes > 0
+
+      length = 0
+      len_bytes.times do |i|
+        temp_len = data.byteslice(2 + i).unpack('C')[0]
+        length = ( length << 8 ) + temp_len
       end
+
       elem_start += len_bytes
     end
 
