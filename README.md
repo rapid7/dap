@@ -13,6 +13,26 @@ DAP was written to process terabyte-sized public scan datasets, such as those pr
 
 DAP depends on GeoIP (http://dev.maxmind.com/geoip/legacy/downloadable/) to be able to append geographic metadata to analyzed datasets.  At least on Ubuntu, the libgeoip-dev package provides this capability.
 
+## Installation
+
+### Ubuntu
+
+```bash
+apt-get install libgeoip-dev
+gem install dap
+```
+
+### OS X
+
+```bash
+brew update
+brew install rbenv geoip
+rbenv install 2.3.1
+rbenv global 2.3.1
+rbenv init
+gem install dap
+```
+
 ## Usage
 
 See [Samples](https://github.com/rapid7/dap/tree/master/samples)
