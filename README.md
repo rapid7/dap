@@ -42,12 +42,25 @@ gem install dap
 
 ## Usage
 
+In its simplest form, DAP takes input, applies zero or more filters which modify the input, and then outputs the result.  The input, filters and output are separated by plus signs (`+`).  As seen from `dap -h`:
+
+```
+Uage: dap  [input] + [filter] + [output]
+       --inputs
+       --outputs
+       --filters
+```
+
+To see which input/output formats are supported and what filters are available, run `dap --inputs`,`dap --outputs` or `dap --filters`, respectively.
+
+This example reads as input a single IP address from `STDIN` in line form, applies geo-ip transofmrations as a filter on that line, and then returns the output as JSON:
+
 ```
 $  echo 8.8.8.8 | bin/dap + lines + geo_ip line + json
 {"line":"8.8.8.8","line.country_code":"US","line.country_code3":"USA","line.country_name":"United States","line.latitude":"38.0","line.longitude":"-97.0"}
 ```
 
-Where dap gets fun is doing transforms, like just grabbing the country code:
+This example does the same, but only outputs the geo-ip country code:
 
 ```
 $  echo 8.8.8.8 | bin/dap + lines + geo_ip line + select line.country_code3 + lines
