@@ -4,27 +4,41 @@ class LDAP
 
   # LDAPResult element resultCode lookup
   #   Reference: https://tools.ietf.org/html/rfc4511#section-4.1.9
+  #              https://ldapwiki.willeke.com/wiki/LDAP%20Result%20Codes
   RESULT_DESC = {
     0 => 'success',
     1 => 'operationsError',
     2 => 'protocolError',
     3 => 'timeLimitExceeded',
     4 => 'sizeLimitExceeded',
+    5 => 'compareFalse',
+    6 => 'compareTrue',
     7 => 'authMethodNotSupported',
     8 => 'strongerAuthRequired',
+    9 => 'reserved',
     10 => 'referral',
     11 => 'adminLimitExceeded',
     12 => 'unavailableCriticalExtension',
     13 => 'confidentialityRequired',
     14 => 'saslBindInProgress',
+    16 => 'noSuchAttribute',
+    17 => 'undefinedAttributeType',
+    18 => 'inappropriateMatching',
+    19 => 'constraintViolation',
+    20 => 'attributeOrValueExists',
+    21 => 'invalidAttributeSyntax',
     32 => 'noSuchObject',
-    43 => 'invalidDNSyntax',
+    34 => 'invalidDNSyntax',
     48 => 'inappropriateAuthentication',
     49 => 'invalidCredentials',
     50 => 'insufficientAccessRights',
     51 => 'busy',
     52 => 'unavailable',
     53 => 'unwillingToPerform',
+    64 => 'namingViolation',
+    80 => 'other',
+    82 => 'localError (client response)',
+    94 => 'noResultsReturned (client response)',
   }
 
   #
