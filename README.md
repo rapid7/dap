@@ -21,7 +21,6 @@ system managed/installed Rubies is possible but fraught with peril.
 
 DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/downloadable/) to be able to append geographic metadata to analyzed datasets.  If you intend on using this capability, run the following as `root`:
 
-
 ```bash
 mkdir -p /var/lib/geoip && cd /var/lib/geoip && wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && gunzip GeoLiteCity.dat.gz && mv GeoLiteCity.dat geoip.dat
 ```
@@ -35,7 +34,6 @@ gem install dap
 
 ### OS X
 
-
 ```bash
 brew update
 brew install geoip
@@ -43,8 +41,6 @@ gem install dap
 ```
 
 ## Usage
-
-See [Samples](https://github.com/rapid7/dap/tree/master/samples)
 
 ```
 $  echo 8.8.8.8 | bin/dap + lines + geo_ip line + json
@@ -58,3 +54,4 @@ $  echo 8.8.8.8 | bin/dap + lines + geo_ip line + select line.country_code3 + li
 USA
 ```
 
+There are also several examples of how to use DAP along with sample datasets [here](samples).
