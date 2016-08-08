@@ -2,22 +2,23 @@ module Dap
 module Input
 
   require 'oj'
-  
+
   #
   # Error codes for failed reads
-  # 
+  #
   module Error
     EOF   = :eof
     Empty = :empty
+    InvalidFormat = :invalid
   end
 
   module FileSource
-    
+
     attr_accessor :fd
 
     def open(file_name)
       close
-      self.fd = ['-', 'stdin', nil].include?(file_name) ? 
+      self.fd = ['-', 'stdin', nil].include?(file_name) ?
         $stdin : ::File.open(file_name, "rb")
     end
 
@@ -31,7 +32,7 @@ module Input
   # Line Input
   #
   class InputLines
-    
+
     include FileSource
 
     def initialize(args)
@@ -50,17 +51,23 @@ module Input
   # JSON Input (line-delimited records)
   #
   class InputJSON
-    
+
     include FileSource
 
     def initialize(args)
       self.open(args.first)
     end
 
-    def read_record  
+    def read_record
       line = self.fd.readline rescue nil
       return Error::EOF unless line
-      json = Oj.load(line.strip) rescue nil
+      begin
+        json = Oj.load(line.strip)
+      rescue
+        $stderr.puts "\nRecord is not valid JSON and will be skipped."
+        $stderr.puts line
+        return Error::InvalidFormat
+      end
       return Error::Empty unless json
       json
     end

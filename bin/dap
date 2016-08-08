@@ -113,6 +113,7 @@ while true
   data = inp.read_record
   break if data == Dap::Input::Error::EOF
   next if data == Dap::Input::Error::Empty
+  next if data == Dap::Input::Error::InvalidFormat
 
   docs = [ data ]
   
