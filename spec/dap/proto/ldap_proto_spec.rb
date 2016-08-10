@@ -103,6 +103,20 @@ describe Dap::Proto::LDAP do
         expect(split_messages).to eq([])
       end
     end
+
+    context 'testing empty ASN.1 Sequence' do
+      hex = ['308400000000']
+      empty_seq = hex.pack('H*')
+
+      let(:split_messages) { subject.split_messages(empty_seq) }
+      it 'returns Array as expected' do
+        expect(split_messages.class).to eq(::Array)
+      end
+
+      it 'returns empty Array as expected' do
+        expect(split_messages).to eq([])
+      end
+    end
   end
 
   describe '.parse_ldapresult' do
