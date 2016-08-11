@@ -2,10 +2,6 @@ language: ruby
 cache: bundler
 sudo: false
 
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y openssl
-
 rvm:
   - 2.1.7
 addons:
@@ -13,4 +9,5 @@ addons:
     packages:
     - libgeoip-dev
     - libgeoip1
+    - openssl
 script: openssl version && bundle exec rspec spec
