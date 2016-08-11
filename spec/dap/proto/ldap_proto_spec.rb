@@ -237,8 +237,8 @@ describe Dap::Proto::LDAP do
     end
 
     context 'testing empty ASN.1 Sequence' do
-      hex = ['308400000000']
-      data = OpenSSL::ASN1.decode(hex.pack('H*'))
+
+      data = OpenSSL::ASN1::Sequence.new([])
 
       let(:parse_message) { subject.parse_message(data) }
       it 'returns Array as expected' do
