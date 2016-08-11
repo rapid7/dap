@@ -4,15 +4,10 @@ sudo: false
 
 rvm:
   - 2.1.7
-  - 2.3.1
-
 addons:
   apt:
     packages:
     - libgeoip-dev
     - libgeoip1
     - openssl
-script:
-    - openssl version
-    - ruby -v -ropenssl -rfiddle -e 'puts Fiddle::Function.new(Fiddle.dlopen(nil)["SSLeay_version"], [Fiddle::TYPE_INT], Fiddle::TYPE_VOIDP).call(0)'
-    - bundle exec rspec spec
+script: openssl version && bundle exec rspec spec
