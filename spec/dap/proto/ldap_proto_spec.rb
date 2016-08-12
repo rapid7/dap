@@ -57,6 +57,8 @@ describe Dap::Proto::LDAP do
 
     data = original.pack('H*')
 
+    excessive_len = ['308480010000000000000000'].pack('H*')
+
     entry = ['3030020107642b040030273025040b6f626a656374436c6173'\
              '7331160403746f70040f4f70656e4c444150726f6f74445345']
 
@@ -88,6 +90,31 @@ describe Dap::Proto::LDAP do
       let(:split_messages) { subject.split_messages('00') }
       it 'returns Array as expected' do
         expect(split_messages.class).to eq(::Array)
+      end
+    end
+
+    context 'testing message length greater than total data length' do
+      let(:split_messages) { subject.split_messages(excessive_len) }
+      it 'returns Array as expected' do
+        expect(split_messages.class).to eq(::Array)
+      end
+
+      it 'returns empty Array as expected' do
+        expect(split_messages).to eq([])
+      end
+    end
+
+    context 'testing empty ASN.1 Sequence' do
+      hex = ['308400000000']
+      empty_seq = hex.pack('H*')
+
+      let(:split_messages) { subject.split_messages(empty_seq) }
+      it 'returns Array as expected' do
+        expect(split_messages.class).to eq(::Array)
+      end
+
+      it 'returns empty Array as expected' do
+        expect(split_messages).to eq([])
       end
     end
   end
@@ -205,6 +232,24 @@ describe Dap::Proto::LDAP do
 
       it 'returns UnhandledTag value as expected' do
         test_val = ['UnhandledTag', { 'tagNumber' => 7 }]
+        expect(parse_message).to eq(test_val)
+      end
+    end
+
+    context 'testing empty ASN.1 Sequence' do
+
+      data = OpenSSL::ASN1::Sequence.new([])
+
+      let(:parse_message) { subject.parse_message(data) }
+      it 'returns Array as expected' do
+        expect(parse_message.class).to eq(::Array)
+      end
+
+      it 'returns error value as expected' do
+        test_val = ['Error', {
+                      'errorMessage' =>
+                        'parse_message: Invalid LDAP response (Empty Sequence)'
+        }]
         expect(parse_message).to eq(test_val)
       end
     end

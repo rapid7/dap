@@ -166,6 +166,12 @@ class LDAP
       return [result_type, results]
     end
 
+    unless data.value && data.value.length > 1
+      result_type = 'Error'
+      results['errorMessage'] = 'parse_message: Invalid LDAP response (Empty Sequence)'
+      return [result_type, results]
+    end
+
     if data.value[1].tag == 4
       # SearchResultEntry found..
       result_type = 'SearchResultEntry'
