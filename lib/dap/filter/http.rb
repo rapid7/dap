@@ -4,6 +4,8 @@ module Filter
 require 'htmlentities'
 require 'shellwords'
 require 'uri'
+require 'zlib'
+require 'stringio'
 
 # Dirty element extractor, works around memory issues with Nokogiri
 module HTMLGhetto
@@ -191,9 +193,17 @@ class FilterDecodeHTTPReply
     # Some buggy systems exclude the header entirely
     body ||= head
 
+    if save["http_raw_headers"]["content-encoding"] == "gzip"
+      begin
+        gunzip = Zlib::GzipReader.new(StringIO.new(body))
+        body = gunzip.read.encode('UTF-8', :invalid=>:replace, :replace=>'?')
+        gunzip.close()
+      rescue
+      end
+    end
     save["http_body"] = body
 
-    if body =~ /<title>([^>]+)</min
+    if body =~ /<title>([^>]+)</mi
       save["http_title"] = $1.strip
     end
 
