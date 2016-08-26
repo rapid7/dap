@@ -174,7 +174,7 @@ end
 class FilterFlatten
   include Base
   def process(doc)
-    self.opts.each_pair do |k,v|
+    self.opts.each_pair do |k,|
       if doc.has_key?(k) and doc[k].is_a?(Hash)
         doc[k].each_pair do |fk,fv|
           doc["#{k}.#{fk}"] = fv
