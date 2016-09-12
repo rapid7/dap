@@ -1,5 +1,6 @@
 require 'digest/sha1'
 require 'digest/md5'
+require 'digest/sha2'
 
 module Dap
 module Filter
@@ -387,6 +388,8 @@ class FilterDigest
           doc["#{k}.sha1"] = Digest::SHA1.hexdigest(doc[k].to_s)
         when 'md5'
           doc["#{k}.md5"] = Digest::MD5.hexdigest(doc[k].to_s)
+        when 'sha256'
+          doc["#{k}.sha256"] = Digest::SHA256.hexdigest(doc[k].to_s)
         end
       end
     end
