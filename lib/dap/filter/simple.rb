@@ -7,6 +7,15 @@ module Filter
 
 class FilterRename
   include Base
+
+  def initialize(args)
+    super
+    missing_rename = self.opts.select { |k, v| v.nil? }.keys
+    unless missing_rename.empty?
+      fail "Missing new name for renames of #{missing_rename.join(',')}"
+    end
+  end
+
   def process(doc)
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
