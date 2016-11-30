@@ -140,7 +140,7 @@ module Output
     end
 
     def write_record(doc)
-      self.fd.puts Oj.dump(sanitize(doc))
+      self.fd.puts Oj.dump(sanitize(doc), mode: :strict)
       self.fd.flush
     end
 
