@@ -154,6 +154,8 @@ class FilterTransform
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
         case v
+        when 'reverse'
+          doc[k] = doc[k].to_s.reverse
         when 'downcase'
           doc[k] = doc[k].to_s.downcase
         when 'upcase'
