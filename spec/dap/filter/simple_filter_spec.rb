@@ -18,3 +18,17 @@ describe Dap::Filter::FilterFlatten do
     end
   end
 end
+
+describe Dap::Filter::FilterTransform do
+  describe '.process' do
+
+    let(:filter) { described_class.new(['foo=reverse']) }
+
+    context 'ASCII' do
+      let(:process) { filter.process({'foo' => 'abc123'}) }
+      it 'is reversed' do
+        expect(process).to eq(['foo' => '321cba'])
+      end
+    end
+  end
+end
