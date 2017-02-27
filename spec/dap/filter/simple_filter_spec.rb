@@ -30,5 +30,12 @@ describe Dap::Filter::FilterTransform do
         expect(process).to eq(['foo' => '321cba'])
       end
     end
+
+    context 'UTF-8' do
+      let(:process) { filter.process({'foo' => '☹☠'}) }
+      it 'is reversed' do
+        expect(process).to eq(['foo' => '☠☹'])
+      end
+    end
   end
 end
