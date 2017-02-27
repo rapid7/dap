@@ -62,7 +62,7 @@ module Input
       line = self.fd.readline rescue nil
       return Error::EOF unless line
       begin
-        json = Oj.load(line.strip)
+        json = Oj.load(line.strip, mode: :strict)
       rescue
         $stderr.puts "\nRecord is not valid JSON and will be skipped."
         $stderr.puts line
