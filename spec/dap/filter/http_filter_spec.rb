@@ -51,3 +51,31 @@ describe Dap::Filter::FilterDecodeHTTPReply do
 
   end
 end
+
+describe Dap::Filter::FilterHTMLLinks do
+  describe '.process' do
+
+    let(:filter) { described_class.new(['data']) }
+
+    context 'lowercase' do
+      let(:processed) { filter.process({'data' => '<a href="a"/><a href="b"/>'}) }
+      it 'extracted the correct links' do
+        expect(processed.map { |p| p['link'] }).to eq(%w(a b))
+      end
+    end
+
+    context 'uppercase' do
+      let(:processed) { filter.process({'data' => '<A HREF="a"/><A HREF="b"/>'}) }
+      it 'extracted the correct links' do
+        expect(processed.map { |p| p['link'] }).to eq(%w(a b))
+      end
+    end
+
+    context 'scattercase' do
+      let(:processed) { filter.process({'data' => '<A HrEf="a"/><A HrEf="b"/>'}) }
+      it 'extracted the correct links' do
+        expect(processed.map { |p| p['link'] }).to eq(%w(a b))
+      end
+    end
+  end
+end
