@@ -28,7 +28,6 @@ module HTMLGhetto
 
       # Skip non-alpha elements
       next unless name =~ /^[a-zA-Z]/
-      name = name.downcase
 
       # Convert newlines to spaces & strip trailing />
       astr = astr.gsub(/\n/, ' ').sub(/\/$/, '')
