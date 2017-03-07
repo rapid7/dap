@@ -28,6 +28,7 @@ module HTMLGhetto
 
       # Skip non-alpha elements
       next unless name =~ /^[a-zA-Z]/
+      name = name.downcase
 
       # Convert newlines to spaces & strip trailing />
       astr = astr.gsub(/\n/, ' ').sub(/\/$/, '')
@@ -38,7 +39,7 @@ module HTMLGhetto
        Shellwords.shellwords(astr).each do |attr_str|
           aname, avalue = attr_str.split('=', 2).map{|x| x.to_s.strip }
           avalue = avalue.to_s.gsub(/^\"|"$/, '')
-          o[aname] = @coder.decode(avalue)
+          o[aname.downcase] = @coder.decode(avalue)
         end
       rescue ::Interrupt
         raise $!
@@ -47,7 +48,7 @@ module HTMLGhetto
         astr.to_s.split(/\s+/).each do |attr_str|
           aname, avalue = attr_str.split('=', 2).map{|x| x.to_s.strip }
           avalue = avalue.to_s.gsub(/^\"|"$/, '')
-          o[aname] = @coder.decode(avalue)
+          o[aname.downcase] = @coder.decode(avalue)
         end
       end
       res << o
