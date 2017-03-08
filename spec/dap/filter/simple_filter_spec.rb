@@ -19,21 +19,21 @@ describe Dap::Filter::FilterFlatten do
   end
 end
 
-describe Dap::Filter::FilterStack do
+describe Dap::Filter::FilterExpand do
   describe '.process' do
 
     let(:filter) { described_class.new(["foo"]) }
 
-    context 'stack unnested json' do
+    context 'expand unnested json' do
       let(:process) { filter.process({"foo.bar" => "baz"}) }
-      it 'has new stacked keys' do
+      it 'has new expanded keys' do
         expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz"}])
       end
     end
 
     context 'ignore all but specified  unnested json' do
       let(:process) { filter.process({"foo.bar" => "baz", "baf.blah" => "baz" }) }
-      it 'has new stacked keys' do
+      it 'has new expanded keys' do
         expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz", "baf.blah" => "baz"}])
       end
     end

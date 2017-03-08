@@ -197,7 +197,7 @@ class FilterFlatten
   end
 end
 
-class FilterStack
+class FilterExpand
   include Base
   def process(doc)
     new_doc = doc.clone
