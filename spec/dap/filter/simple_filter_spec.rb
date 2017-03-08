@@ -19,6 +19,27 @@ describe Dap::Filter::FilterFlatten do
   end
 end
 
+describe Dap::Filter::FilterStack do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["foo"]) }
+
+    context 'stack unnested json' do
+      let(:process) { filter.process({"foo.bar" => "baz"}) }
+      it 'has new stacked keys' do
+        expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz"}])
+      end
+    end
+
+    context 'ignore nested json' do
+      let(:process) { filter.process({"foo" => "bar"}) }
+      it 'is the same as the original document' do
+        expect(process).to eq([{"foo" => "bar"}])
+      end
+    end
+  end
+end
+
 describe Dap::Filter::FilterTransform do
   describe '.process' do
 
