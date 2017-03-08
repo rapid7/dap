@@ -202,10 +202,11 @@ class FilterStack
   def process(doc)
     new_doc = doc.clone
     self.opts.each_pair do |k,|
+      k_re = /^#{k}\.(?<sub_key>.+)$/
       doc.each do |fk,fv|
-        if /\.(?<sub_key>.+)$/ =~ fk
+        if md = k_re.match(fk)
           new_doc[k] ||= {}
-          new_doc[k][sub_key] = fv
+          new_doc[k][md[:sub_key]] = fv
         end
       end
     end

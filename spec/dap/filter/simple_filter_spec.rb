@@ -31,6 +31,13 @@ describe Dap::Filter::FilterStack do
       end
     end
 
+    context 'ignore all but specified  unnested json' do
+      let(:process) { filter.process({"foo.bar" => "baz", "baf.blah" => "baz" }) }
+      it 'has new stacked keys' do
+        expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz", "baf.blah" => "baz"}])
+      end
+    end
+
     context 'ignore nested json' do
       let(:process) { filter.process({"foo" => "bar"}) }
       it 'is the same as the original document' do
