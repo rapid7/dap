@@ -19,6 +19,34 @@ describe Dap::Filter::FilterFlatten do
   end
 end
 
+describe Dap::Filter::FilterExpand do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["foo"]) }
+
+    context 'expand unnested json' do
+      let(:process) { filter.process({"foo.bar" => "baz"}) }
+      it 'has new expanded keys' do
+        expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz"}])
+      end
+    end
+
+    context 'ignore all but specified  unnested json' do
+      let(:process) { filter.process({"foo.bar" => "baz", "baf.blah" => "baz" }) }
+      it 'has new expanded keys' do
+        expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz", "baf.blah" => "baz"}])
+      end
+    end
+
+    context 'ignore nested json' do
+      let(:process) { filter.process({"foo" => "bar"}) }
+      it 'is the same as the original document' do
+        expect(process).to eq([{"foo" => "bar"}])
+      end
+    end
+  end
+end
+
 describe Dap::Filter::FilterTransform do
   describe '.process' do
 

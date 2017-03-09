@@ -197,6 +197,23 @@ class FilterFlatten
   end
 end
 
+class FilterExpand
+  include Base
+  def process(doc)
+    new_doc = doc.clone
+    self.opts.each_pair do |k,|
+      k_re = /^#{k}\.(?<sub_key>.+)$/
+      doc.each do |fk,fv|
+        if md = k_re.match(fk)
+          new_doc[k] ||= {}
+          new_doc[k][md[:sub_key]] = fv
+        end
+      end
+    end
+   [ new_doc ]
+  end
+end
+
 class FilterTruncate
   include Base
   def process(doc)
