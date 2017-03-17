@@ -26,6 +26,19 @@ class FilterRename
    [ doc ]
   end
 end
+class FilterMatchRemove
+  include Base
+  def process(doc)
+    self.opts.each_pair do |re,_|
+      doc.each_key do |k|
+        if k.match(re)
+          doc.delete(k)
+        end
+      end
+    end
+   [ doc ]
+  end
+end
 
 class FilterRemove
   include Base
