@@ -5,6 +5,19 @@ require 'digest/sha2'
 module Dap
 module Filter
 
+class FilterCopy
+  include Base
+
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        doc[v] = doc[k]
+      end
+    end
+   [ doc ]
+  end
+end
+
 class FilterRename
   include Base
 

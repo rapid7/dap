@@ -1,3 +1,17 @@
+describe Dap::Filter::FilterCopy do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["foo=bar"]) }
+
+    context 'copy one json field to another' do
+      let(:process) { filter.process({"foo" => "bar"}) }
+      it 'copies and leaves the original field' do
+        expect(process).to eq([{"foo" => "bar", "bar" => "bar"}])
+      end
+    end
+  end
+end
+
 describe Dap::Filter::FilterFlatten do
   describe '.process' do
 
