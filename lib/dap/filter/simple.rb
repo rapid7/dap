@@ -44,11 +44,10 @@ end
 # one level below 'my_key'
 # rename_subkey_match my_key '.' '_'
 class FilterRenameSubkeyMatch
-  attr_accessor :name, :opts
+  include Base
 
   def initialize(args)
-    self.name = Dap::Factory.name_from_class(self.class)
-    self.opts = {}
+    super
     fail "Expected 3 arguments to '#{self.name}' but got #{args.size}" unless args.size == 3
     self.opts = args
   end
