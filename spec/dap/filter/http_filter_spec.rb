@@ -35,12 +35,12 @@ describe Dap::Filter::FilterDecodeHTTPReply do
 
       it 'extracts Date http header' do
         expect(decode_date['http_raw_headers']['date']).to eq(["Fri, 24 Mar 2017 15:34:04 GMT"])
-	expect(decode_date['http_date']).to eq("20170324T08:34:04")
+	expect(decode_date['http_date']).to eq("20170324T15:34:04+0000")
       end
 
       it 'extracts Last-Modified http header' do
         expect(decode_date['http_raw_headers']['last-modified']).to eq(["Fri, 24 Mar 2013 15:34:04 GMT"])
-	expect(decode_date['http_modified']).to eq("20130324T08:34:04")
+	expect(decode_date['http_modified']).to eq("20130324T15:34:04+0000")
       end
     end
 

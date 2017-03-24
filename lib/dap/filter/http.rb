@@ -175,11 +175,11 @@ class FilterDecodeHTTPReply
 
           when 'date'
             d = DateTime.parse(header_value) rescue nil
-            save["http_date"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
+            save["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
 
           when 'last-modified'
             d = DateTime.parse(header_value) rescue nil
-            save["http_modified"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
+            save["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
 
           when 'location'
             save["http_location"] = header_value
