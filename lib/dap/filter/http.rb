@@ -149,41 +149,51 @@ class FilterDecodeHTTPReply
 
     while lines.length > 0
       hline = lines.shift
-      case hline
-      when /^ETag:\s*(.*)/i
-        save["http_etag"] = $1
+      if /^(?<header_name>[^:]+):\s*(?<header_value>.*)$/ =~ hline
+        header_value.strip!
+        header_name.downcase!
 
-      when /^Set-Cookie:\s*(.*)/i
-        bits = $1.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
-        save["http_cookie"] = bits.strip
+        if valid_header_name?(header_name)
+          save["http_raw_headers"] ||= {}
+          save["http_raw_headers"][header_name] ||= []
+          save["http_raw_headers"][header_name] << header_value
 
-      when /^Server:\s*(.*)/i
-        save["http_server"] = $1.strip
+          # XXX: warning, all of these mishandle duplicate headers
+          case header_name
+          when 'etag'
+            save["http_etag"] = header_value
 
-      when /^X-Powered-By:\s*(.*)/i
-        save["http_powered"] = $1.strip
+          when 'set-cookie'
+            bits = header_value.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
+            save["http_cookie"] = bits
 
-      when /^Date:\s*(.*)/i
-        d = DateTime.parse($1.strip) rescue nil
-        save["http_date"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
+          when 'server'
+            save["http_server"] = header_value
 
-      when /^Last-modified:\s*(.*)/i
-        d = DateTime.parse($1.strip) rescue nil
-        save["http_modified"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
+          when 'x-powered-by'
+            save["http_powered"] = header_value
 
-      when /^Location:\s*(.*)/i
-        save["http_location"] = $1.strip
+          when 'date'
+            d = DateTime.parse(header_value) rescue nil
+            save["http_date"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
 
-      when /^WWW-Authenticate:\s*(.*)/i
-        save["http_auth"] = $1.strip
+          when 'last-modified'
+            d = DateTime.parse(header_value) rescue nil
+            save["http_modified"] = d.to_time.strftime("%Y%m%dT%H:%M:%S") if d
 
-      when /^Content-Length:\s*(.*)/i
-        clen = $1.strip.to_i
+          when 'location'
+            save["http_location"] = header_value
 
-      when /^([A-Za-z0-9\-]+):\s*(.*)/i
-        save["http_raw_headers"][$1.downcase.strip] = $2.strip
+          when 'www-authenticate'
+            save["http_auth"] = header_value
 
-      when ""
+          when 'content-length'
+            save["content-length"] = header_value.to_i
+          end
+        else
+          # not a valid header.  XXX, eventually we should log or do something more useful here
+        end
+      elsif hline == ""
         break
       end
     end
@@ -193,7 +203,11 @@ class FilterDecodeHTTPReply
     # Some buggy systems exclude the header entirely
     body ||= head
 
-    if save["http_raw_headers"]["content-encoding"] == "gzip"
+    File.open("/tmp/foo", 'w') { |file| file.write(save) }
+
+    content_encoding = save["http_raw_headers"]["content-encoding"]
+
+    if content_encoding && content_encoding.include?("gzip")
       begin
         gunzip = Zlib::GzipReader.new(StringIO.new(body))
         body = gunzip.read.encode('UTF-8', :invalid=>:replace, :replace=>'?')
@@ -208,6 +222,10 @@ class FilterDecodeHTTPReply
     end
 
     save
+  end
+
+  def valid_header_name?(name)
+    return name !~ /[\x00-\x1f()<>@,;:\\\"\/\[\]?={}\s]/
   end
 end
 

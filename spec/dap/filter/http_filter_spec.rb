@@ -14,7 +14,7 @@ describe Dap::Filter::FilterDecodeHTTPReply do
     end
 
     context 'decoding uncompressed response' do
-      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nHeader1: value1\r\n\r\nstuff") }
+      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nHeader1: value1\r\nHow(}does<htTp=work?:itdoesn't\r\nHeader2: value2\r\nHEADER2: VALUE2\r\n\r\nstuff") }
 
       it 'correctly sets status code' do
         expect(decode['http_code']).to eq(200)
@@ -28,8 +28,8 @@ describe Dap::Filter::FilterDecodeHTTPReply do
         expect(decode['http_body']).to eq('stuff')
       end
 
-      it 'correct extracts header(s)' do
-        expect(decode['http_raw_headers']).to eq({'header1' => 'value1'})
+      it 'correctly extracts http_raw_headers' do
+        expect(decode['http_raw_headers']).to eq({'header1' => ['value1'], 'header2' => ['value2', 'VALUE2']})
       end
     end
 
