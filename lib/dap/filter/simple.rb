@@ -58,8 +58,8 @@ class FilterRenameSubkeyMatch
     field, original, updated = self.opts
     return [ doc ] unless doc[field].is_a?(::Hash)
     doc[field].each_key do |k|
-        new_k = k.gsub(original, updated)
-        temp_field[new_k] = doc[field][k]
+      new_k = k.gsub(original, updated)
+      temp_field[new_k] = doc[field][k]
     end
     doc[field] = temp_field
     [ doc ]
