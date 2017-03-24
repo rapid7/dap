@@ -45,7 +45,7 @@ describe Dap::Filter::FilterExpand do
       end
     end
 
-    context 'ignore all but specified  unnested json' do
+    context 'ignore all but specified unnested json' do
       let(:process) { filter.process({"foo.bar" => "baz", "baf.blah" => "baz" }) }
       it 'has new expanded keys' do
         expect(process).to eq([{"foo" => {"bar" => "baz"}, "foo.bar" => "baz", "baf.blah" => "baz"}])
@@ -56,6 +56,27 @@ describe Dap::Filter::FilterExpand do
       let(:process) { filter.process({"foo" => "bar"}) }
       it 'is the same as the original document' do
         expect(process).to eq([{"foo" => "bar"}])
+      end
+    end
+  end
+end
+
+describe Dap::Filter::FilterRenameSubkeyMatch do
+  describe '.process' do
+
+    let(:filter) { described_class.new(['foo', '.', '_']) }
+
+    context 'with subkeys' do
+      let(:process) { filter.process({"foo" => {"bar.one" => "baz", "bar.two" => "baz"}, "foo.bar" => "baz", "bar" => {"bar.one" => "baz", "bar.two" => "baz"}}) }
+      it 'renames keys as expected' do
+        expect(process).to eq([{"foo" => {"bar_one" => "baz", "bar_two" => "baz"}, "foo.bar" => "baz", "bar" => {"bar.one" => "baz", "bar.two" => "baz"}}])
+      end
+    end
+
+    context 'without subkeys' do
+      let(:process) { filter.process({"foo" => "bar", "foo.blah" => "blah", "foo.bar" => "baz"}) }
+      it 'produces unchanged output without errors' do
+        expect(process).to eq([{"foo" => "bar", "foo.blah" => "blah", "foo.bar" => "baz"}])
       end
     end
   end
