@@ -14,7 +14,8 @@ describe Dap::Filter::FilterDecodeHTTPReply do
     end
 
     context 'decoding uncompressed response' do
-      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nHeader1: value1\r\n\r\nstuff") }
+      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nHeader1: value1\r\nHow(}does<htTp=work?:itdoesn't\r\nHeader2: value2\r\nHEADER2: VALUE2\r\n\r\nstuff") }
+      let(:decode_date) { filter.decode("HTTP/1.0 200 OK\r\nHeader1: value1\r\nHow(}does<htTp=work?:itdoesn't\r\nDate: Fri, 24 Mar 2017 15:34:04 GMT\r\nHEADER2: VALUE2\r\nLast-Modified: Fri, 24 Mar 2013 15:34:04 GMT\r\n\r\nstuff") }
 
       it 'correctly sets status code' do
         expect(decode['http_code']).to eq(200)
@@ -28,8 +29,18 @@ describe Dap::Filter::FilterDecodeHTTPReply do
         expect(decode['http_body']).to eq('stuff')
       end
 
-      it 'correct extracts header(s)' do
-        expect(decode['http_raw_headers']).to eq({'header1' => 'value1'})
+      it 'correctly extracts http_raw_headers' do
+        expect(decode['http_raw_headers']).to eq({'header1' => ['value1'], 'header2' => ['value2', 'VALUE2']})
+      end
+
+      it 'extracts Date http header' do
+        expect(decode_date['http_raw_headers']['date']).to eq(["Fri, 24 Mar 2017 15:34:04 GMT"])
+	expect(decode_date['http_date']).to eq("20170324T15:34:04+0000")
+      end
+
+      it 'extracts Last-Modified http header' do
+        expect(decode_date['http_raw_headers']['last-modified']).to eq(["Fri, 24 Mar 2013 15:34:04 GMT"])
+	expect(decode_date['http_modified']).to eq("20130324T15:34:04+0000")
       end
     end
 
