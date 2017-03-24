@@ -39,6 +39,33 @@ class FilterRename
    [ doc ]
   end
 end
+
+# Example below replaces periods with underscores in the names of all keys
+# one level below 'my_key'
+# rename_subkey_match my_key '.' '_'
+class FilterRenameSubkeyMatch
+  attr_accessor :name, :opts
+
+  def initialize(args)
+    self.name = Dap::Factory.name_from_class(self.class)
+    self.opts = {}
+    fail "Expected 3 arguments to '#{self.name}' but got #{args.size}" unless args.size == 3
+    self.opts = args
+  end
+
+  def process(doc)
+    temp_field = {}
+    field, original, updated = self.opts
+    return [ doc ] unless doc[field].is_a?(::Hash)
+    doc[field].each_key do |k|
+        new_k = k.gsub(original, updated)
+        temp_field[new_k] = doc[field][k]
+    end
+    doc[field] = temp_field
+    [ doc ]
+  end
+end
+
 class FilterMatchRemove
   include Base
   def process(doc)
