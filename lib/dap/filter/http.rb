@@ -203,8 +203,6 @@ class FilterDecodeHTTPReply
     # Some buggy systems exclude the header entirely
     body ||= head
 
-    File.open("/tmp/foo", 'w') { |file| file.write(save) }
-
     content_encoding = save["http_raw_headers"]["content-encoding"]
 
     if content_encoding && content_encoding.include?("gzip")
