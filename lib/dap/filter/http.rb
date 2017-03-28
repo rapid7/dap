@@ -203,6 +203,8 @@ class FilterDecodeHTTPReply
     # Some buggy systems exclude the header entirely
     body ||= head
 
+    save["http_raw_body"] = [body].pack("m*").gsub(/\s+/n, "")
+
     content_encoding = save["http_raw_headers"]["content-encoding"]
 
     if content_encoding && content_encoding.include?("gzip")
