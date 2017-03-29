@@ -91,6 +91,21 @@ class FilterRemove
   end
 end
 
+class FilterMatchSelect
+  include Base
+  def process(doc)
+    ndoc = {}
+    self.opts.each_pair do |re,|
+      doc.each_key do |k|
+        if k.match(re)
+          ndoc[k] = doc[k]
+        end
+      end
+    end
+   (ndoc.keys.length == 0) ? [] : [ ndoc ]
+  end
+end
+
 class FilterSelect
   include Base
   def process(doc)
