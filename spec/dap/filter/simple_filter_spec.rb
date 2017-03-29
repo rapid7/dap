@@ -96,6 +96,34 @@ describe Dap::Filter::FilterMatchRemove do
   end
 end
 
+describe Dap::Filter::FilterMatchSelect do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["foo."]) }
+
+    context 'with similar keys' do
+      let(:process) { filter.process({"foo" => "bar", "foo.blah" => "blah", "foo.bar" => "baz"}) }
+      it 'selects the expected keys' do
+        expect(process).to eq([{"foo.blah" => "blah", "foo.bar" => "baz"}])
+      end
+    end
+  end
+end
+
+describe Dap::Filter::FilterSelect do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["foo"]) }
+
+    context 'with similar keys' do
+      let(:process) { filter.process({"foo" => "bar", "foobar" => "blah"}) }
+      it 'selects the expected keys' do
+        expect(process).to eq([{"foo" => "bar"}])
+      end
+    end
+  end
+end
+
 describe Dap::Filter::FilterTransform do
   describe '.process' do
 
