@@ -139,10 +139,10 @@ class FilterDecodeHTTPReply
     lines = data.split(/\r?\n/)
     resp  = lines.shift
     save  = {}
-    return save if resp !~ /^HTTP\/\d+\.\d+\s+(\d+)\s+(.*)/
+    return save if resp !~ /^HTTP\/\d+\.\d+\s+(\d+)(?:\s+(.*))?/
 
     save["http_code"] = $1.to_i
-    save["http_message"] = $2.strip
+    save["http_message"] = ($2 ? $2.strip : '')
     save["http_raw_headers"] = {}
 
     clen = nil

@@ -72,6 +72,14 @@ describe Dap::Filter::FilterDecodeHTTPReply do
       end
     end
 
+    context 'decoding responses that are missing the "reason phrase", an RFC anomaly' do
+      let(:decode) { filter.decode("HTTP/1.1 301\r\nDate: Tue, 28 Mar 2017 20:46:52 GMT\r\nContent-Type: text/html\r\nContent-Length: 177\r\nConnection: close\r\nLocation: http://www.example.com/\r\n\r\nstuff") }
+
+      it 'decodes anyway' do
+        expect(decode['http_body']).to eq('stuff')
+      end
+    end
+
   end
 end
 
