@@ -175,6 +175,7 @@ class FilterDecodeHTTPReply
         end
       end
 
+      # chunked-encoding allows headers to occur after the chunks, so parse those
       if offset < raw_body.size
         save.merge!(parse_headers(raw_body.slice(offset, raw_body.size).split(/\r?\n/)))
       end
