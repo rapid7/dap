@@ -134,79 +134,54 @@ end
 class FilterDecodeHTTPReply
   include BaseDecoder
 
-  # TODO: Decode transfer-chunked responses
   def decode(data)
     lines = data.split(/\r?\n/)
-    resp  = lines.shift
+    resp = lines.shift
     save  = {}
     return save if resp !~ /^HTTP\/\d+\.\d+\s+(\d+)(?:\s+(.*))?/
 
     save["http_code"] = $1.to_i
     save["http_message"] = ($2 ? $2.strip : '')
     save["http_raw_headers"] = {}
+    save.merge!(parse_headers(lines))
 
-    clen = nil
+    head, raw_body = data.split(/\r?\n\r?\n/, 2)
 
-    while lines.length > 0
-      hline = lines.shift
-      if /^(?<header_name>[^:]+):\s*(?<header_value>.*)$/ =~ hline
-        header_value.strip!
-        header_name.downcase!
+    # Some buggy systems exclude the header entirely
+    raw_body ||= head
 
-        if valid_header_name?(header_name)
-          save["http_raw_headers"] ||= {}
-          save["http_raw_headers"][header_name] ||= []
-          save["http_raw_headers"][header_name] << header_value
+    save["http_raw_body"] = [raw_body].pack("m*").gsub(/\s+/n, "")
+    body = raw_body
 
-          # XXX: warning, all of these mishandle duplicate headers
-          case header_name
-          when 'etag'
-            save["http_etag"] = header_value
-
-          when 'set-cookie'
-            bits = header_value.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
-            save["http_cookie"] = bits
-
-          when 'server'
-            save["http_server"] = header_value
-
-          when 'x-powered-by'
-            save["http_powered"] = header_value
-
-          when 'date'
-            d = DateTime.parse(header_value) rescue nil
-            save["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
-
-          when 'last-modified'
-            d = DateTime.parse(header_value) rescue nil
-            save["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
-
-          when 'location'
-            save["http_location"] = header_value
-
-          when 'www-authenticate'
-            save["http_auth"] = header_value
-
-          when 'content-length'
-            save["content-length"] = header_value.to_i
-          end
+    transfer_encoding = save["http_raw_headers"]["transfer-encoding"]
+    if transfer_encoding && transfer_encoding.include?("chunked")
+      offset = 0
+      body = ''
+      while (true)
+        # read the chunk size from where we currently are.  The chunk size will
+        # be specified in hex, at the beginning, and is followed by \r\n.
+        if /^(?<chunk_size_str>[a-z0-9]+)\r\n/i =~ raw_body.slice(offset, raw_body.size)
+          # convert chunk size
+          chunk_size = chunk_size_str.to_i(16)
+          # advance past this chunk marker and its trailing \r\n
+          offset += chunk_size_str.size + 2
+          # read this chunk, starting from just past the chunk marker and
+          # stopping at the supposed end of the chunk
+          body << raw_body.slice(offset, chunk_size)
+          # advance the offset to past the end of the chunk and its trailing \r\n
+          offset += chunk_size + 2
         else
-          # not a valid header.  XXX, eventually we should log or do something more useful here
+          break
         end
-      elsif hline == ""
-        break
+      end
+
+      # chunked-encoding allows headers to occur after the chunks, so parse those
+      if offset < raw_body.size
+        save.merge!(parse_headers(raw_body.slice(offset, raw_body.size).split(/\r?\n/)))
       end
     end
 
-    head, body = data.split(/\r?\n\r?\n/, 2)
-
-    # Some buggy systems exclude the header entirely
-    body ||= head
-
-    save["http_raw_body"] = [body].pack("m*").gsub(/\s+/n, "")
-
     content_encoding = save["http_raw_headers"]["content-encoding"]
-
     if content_encoding && content_encoding.include?("gzip")
       begin
         gunzip = Zlib::GzipReader.new(StringIO.new(body))
@@ -227,7 +202,63 @@ class FilterDecodeHTTPReply
   def valid_header_name?(name)
     return name !~ /[\x00-\x1f()<>@,;:\\\"\/\[\]?={}\s]/
   end
-end
 
+  def parse_headers(lines)
+    headers = {}
+
+    while lines.length > 0
+      hline = lines.shift
+      if /^(?<header_name>[^:]+):\s*(?<header_value>.*)$/ =~ hline
+        header_value.strip!
+        header_name.downcase!
+
+        if valid_header_name?(header_name)
+          headers["http_raw_headers"] ||= {}
+          headers["http_raw_headers"][header_name] ||= []
+          headers["http_raw_headers"][header_name] << header_value
+
+          # XXX: warning, all of these mishandle duplicate headers
+          case header_name
+          when 'etag'
+            headers["http_etag"] = header_value
+
+          when 'set-cookie'
+            bits = header_value.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
+            headers["http_cookie"] = bits
+
+          when 'server'
+            headers["http_server"] = header_value
+
+          when 'x-powered-by'
+            headers["http_powered"] = header_value
+
+          when 'date'
+            d = DateTime.parse(header_value) rescue nil
+            headers["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+
+          when 'last-modified'
+            d = DateTime.parse(header_value) rescue nil
+            headers["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+
+          when 'location'
+            headers["http_location"] = header_value
+
+          when 'www-authenticate'
+            headers["http_auth"] = header_value
+
+          when 'content-length'
+            headers["content-length"] = header_value.to_i
+          end
+        else
+          # not a valid header.  XXX, eventually we should log or do something more useful here
+        end
+      elsif hline == ""
+        break
+      end
+    end
+
+    return headers
+  end
+end
 end
 end
