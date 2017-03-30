@@ -72,6 +72,15 @@ describe Dap::Filter::FilterDecodeHTTPReply do
       end
     end
 
+    context 'decoding chunked response' do
+      let(:body) { "5\r\nabcde\r\n0F\r\nfghijklmnopqrst\r\n06\r\nuvwxyz\r\n0\r\n" }
+      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nTransfer-encoding: chunked\r\n\r\n#{body}") }
+
+      it 'correctly dechunks body' do
+        expect(decode['http_body']).to eq(('a'..'z').to_a.join)
+      end
+    end
+
     context 'decoding responses that are missing the "reason phrase", an RFC anomaly' do
       let(:decode) { filter.decode("HTTP/1.1 301\r\nDate: Tue, 28 Mar 2017 20:46:52 GMT\r\nContent-Type: text/html\r\nContent-Length: 177\r\nConnection: close\r\nLocation: http://www.example.com/\r\n\r\nstuff") }
 

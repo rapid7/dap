@@ -198,15 +198,38 @@ class FilterDecodeHTTPReply
       end
     end
 
-    head, body = data.split(/\r?\n\r?\n/, 2)
+    head, raw_body = data.split(/\r?\n\r?\n/, 2)
 
     # Some buggy systems exclude the header entirely
-    body ||= head
+    raw_body ||= head
 
-    save["http_raw_body"] = [body].pack("m*").gsub(/\s+/n, "")
+    save["http_raw_body"] = [raw_body].pack("m*").gsub(/\s+/n, "")
+    body = raw_body
+
+    transfer_encoding = save["http_raw_headers"]["transfer-encoding"]
+    if transfer_encoding && transfer_encoding.include?("chunked")
+      offset = 0
+      body = ''
+      while (true)
+        # read the chunk size from where we currently are.  The chunk size will
+        # be specified in hex, at the beginning, and is followed by \r\n.
+        if /^(?<chunk_size_str>[a-z0-9]+)\r\n/i =~ raw_body.slice(offset, raw_body.size)
+          # convert chunk size
+          chunk_size = chunk_size_str.to_i(16)
+          # advance past this chunk marker and its trailing \r\n
+          offset += chunk_size_str.size + 2
+          # read this chunk, starting from just past the chunk marker and
+          # stopping at the supposed end of the chunk
+          body << raw_body.slice(offset, chunk_size)
+          # advance the offset to past the end of the chunk and its trailing \r\n
+          offset += chunk_size + 2
+        else
+          break
+        end
+      end
+    end
 
     content_encoding = save["http_raw_headers"]["content-encoding"]
-
     if content_encoding && content_encoding.include?("gzip")
       begin
         gunzip = Zlib::GzipReader.new(StringIO.new(body))
