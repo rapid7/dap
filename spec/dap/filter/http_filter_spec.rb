@@ -74,10 +74,14 @@ describe Dap::Filter::FilterDecodeHTTPReply do
 
     context 'decoding chunked response' do
       let(:body) { "5\r\nabcde\r\n0F\r\nfghijklmnopqrst\r\n06\r\nuvwxyz\r\n0\r\n" }
-      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nTransfer-encoding: chunked\r\n\r\n#{body}") }
+      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nTransfer-encoding: chunked\r\n\r\n#{body}\r\nSecret: magic\r\n") }
 
       it 'correctly dechunks body' do
         expect(decode['http_body']).to eq(('a'..'z').to_a.join)
+      end
+
+      it 'finds trailing headers' do
+        expect(decode['http_raw_headers']['secret']).to eq(%w(magic))
       end
     end
 

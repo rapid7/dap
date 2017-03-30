@@ -134,69 +134,16 @@ end
 class FilterDecodeHTTPReply
   include BaseDecoder
 
-  # TODO: Decode transfer-chunked responses
   def decode(data)
     lines = data.split(/\r?\n/)
-    resp  = lines.shift
+    resp = lines.shift
     save  = {}
     return save if resp !~ /^HTTP\/\d+\.\d+\s+(\d+)(?:\s+(.*))?/
 
     save["http_code"] = $1.to_i
     save["http_message"] = ($2 ? $2.strip : '')
     save["http_raw_headers"] = {}
-
-    clen = nil
-
-    while lines.length > 0
-      hline = lines.shift
-      if /^(?<header_name>[^:]+):\s*(?<header_value>.*)$/ =~ hline
-        header_value.strip!
-        header_name.downcase!
-
-        if valid_header_name?(header_name)
-          save["http_raw_headers"] ||= {}
-          save["http_raw_headers"][header_name] ||= []
-          save["http_raw_headers"][header_name] << header_value
-
-          # XXX: warning, all of these mishandle duplicate headers
-          case header_name
-          when 'etag'
-            save["http_etag"] = header_value
-
-          when 'set-cookie'
-            bits = header_value.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
-            save["http_cookie"] = bits
-
-          when 'server'
-            save["http_server"] = header_value
-
-          when 'x-powered-by'
-            save["http_powered"] = header_value
-
-          when 'date'
-            d = DateTime.parse(header_value) rescue nil
-            save["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
-
-          when 'last-modified'
-            d = DateTime.parse(header_value) rescue nil
-            save["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
-
-          when 'location'
-            save["http_location"] = header_value
-
-          when 'www-authenticate'
-            save["http_auth"] = header_value
-
-          when 'content-length'
-            save["content-length"] = header_value.to_i
-          end
-        else
-          # not a valid header.  XXX, eventually we should log or do something more useful here
-        end
-      elsif hline == ""
-        break
-      end
-    end
+    save.merge!(parse_headers(lines))
 
     head, raw_body = data.split(/\r?\n\r?\n/, 2)
 
@@ -227,6 +174,10 @@ class FilterDecodeHTTPReply
           break
         end
       end
+
+      if offset < raw_body.size
+        save.merge!(parse_headers(raw_body.slice(offset, raw_body.size).split(/\r?\n/)))
+      end
     end
 
     content_encoding = save["http_raw_headers"]["content-encoding"]
@@ -250,7 +201,63 @@ class FilterDecodeHTTPReply
   def valid_header_name?(name)
     return name !~ /[\x00-\x1f()<>@,;:\\\"\/\[\]?={}\s]/
   end
-end
 
+  def parse_headers(lines)
+    headers = {}
+
+    while lines.length > 0
+      hline = lines.shift
+      if /^(?<header_name>[^:]+):\s*(?<header_value>.*)$/ =~ hline
+        header_value.strip!
+        header_name.downcase!
+
+        if valid_header_name?(header_name)
+          headers["http_raw_headers"] ||= {}
+          headers["http_raw_headers"][header_name] ||= []
+          headers["http_raw_headers"][header_name] << header_value
+
+          # XXX: warning, all of these mishandle duplicate headers
+          case header_name
+          when 'etag'
+            headers["http_etag"] = header_value
+
+          when 'set-cookie'
+            bits = header_value.gsub(/\;?\s*path=.*/i, '').gsub(/\;?\s*expires=.*/i, '').gsub(/\;\s*HttpOnly.*/, '')
+            headers["http_cookie"] = bits
+
+          when 'server'
+            headers["http_server"] = header_value
+
+          when 'x-powered-by'
+            headers["http_powered"] = header_value
+
+          when 'date'
+            d = DateTime.parse(header_value) rescue nil
+            headers["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+
+          when 'last-modified'
+            d = DateTime.parse(header_value) rescue nil
+            headers["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+
+          when 'location'
+            headers["http_location"] = header_value
+
+          when 'www-authenticate'
+            headers["http_auth"] = header_value
+
+          when 'content-length'
+            headers["content-length"] = header_value.to_i
+          end
+        else
+          # not a valid header.  XXX, eventually we should log or do something more useful here
+        end
+      elsif hline == ""
+        break
+      end
+    end
+
+    return headers
+  end
+end
 end
 end
