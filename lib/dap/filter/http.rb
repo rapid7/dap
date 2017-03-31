@@ -156,6 +156,7 @@ class FilterDecodeHTTPReply
     transfer_encoding = save["http_raw_headers"]["transfer-encoding"]
     if transfer_encoding && transfer_encoding.include?("chunked")
       offset = 0
+      chunk_num = 1
       body = ''
       while (true)
         # read the chunk size from where we currently are.  The chunk size will
@@ -165,11 +166,16 @@ class FilterDecodeHTTPReply
           chunk_size = chunk_size_str.to_i(16)
           # advance past this chunk marker and its trailing \r\n
           offset += chunk_size_str.size + 2
+          if offset + chunk_size > raw_body.size
+            $stderr.puts "Skipping impossibly large #{chunk_size}-byte ##{chunk_num} chunk, at offset #{offset}/#{raw_body.size}"
+            break
+          end
           # read this chunk, starting from just past the chunk marker and
           # stopping at the supposed end of the chunk
           body << raw_body.slice(offset, chunk_size)
           # advance the offset to past the end of the chunk and its trailing \r\n
           offset += chunk_size + 2
+          chunk_num += 1
         else
           break
         end
@@ -177,7 +183,16 @@ class FilterDecodeHTTPReply
 
       # chunked-encoding allows headers to occur after the chunks, so parse those
       if offset < raw_body.size
-        save.merge!(parse_headers(raw_body.slice(offset, raw_body.size).split(/\r?\n/)))
+        trailing_headers = parse_headers(raw_body.slice(offset, raw_body.size).split(/\r?\n/))
+        save.merge!(trailing_headers) { |header, old, new|
+          if old.kind_of?(String)
+            [old, new].join(',')
+          elsif old.kind_of?(Hash)
+            old.merge(new) { |nheader, nold, nnew|
+              nold + nnew
+            }
+          end
+        }
       end
     end
 
