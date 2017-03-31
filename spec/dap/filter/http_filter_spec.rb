@@ -89,6 +89,19 @@ describe Dap::Filter::FilterDecodeHTTPReply do
       end
     end
 
+    context 'decoding bogus chunked responses' do
+      let(:body) { "5\r\nabcde\r\nFF\r\nfghijklmnopqrst\r\n06\r\n" }
+      let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nTransfer-encoding: chunked\r\n\r\n#{body}") }
+
+      it 'reads the partial body' do
+        expect(decode['http_body']).to eq(('a'..'e').to_a.join)
+      end
+
+      it 'finds normal headers' do
+        expect(decode['http_raw_headers']['transfer-encoding']).to eq(%w(chunked))
+      end
+    end
+
     context 'decoding truncated, chunked responses' do
       let(:body) { "5\r\nabcde\r\n0F\r\nfghijklmnopqrst\r\n06\r\n" }
       let(:decode) { filter.decode("HTTP/1.0 200 OK\r\nTransfer-encoding: chunked\r\n\r\n#{body}") }

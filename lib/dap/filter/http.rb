@@ -167,7 +167,7 @@ class FilterDecodeHTTPReply
           # advance past this chunk marker and its trailing \r\n
           offset += chunk_size_str.size + 2
           if offset + chunk_size > raw_body.size
-            $stderr.puts "Skipping impossibly large #{chunk_size}-byte ##{chunk_num} chunk"
+            $stderr.puts "Skipping impossibly large #{chunk_size}-byte ##{chunk_num} chunk, at offset #{offset}/#{raw_body.size}"
             break
           end
           # read this chunk, starting from just past the chunk marker and
