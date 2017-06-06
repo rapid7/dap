@@ -369,67 +369,49 @@ class FilterSplitArray
   end
 end
 
-class FilterFieldSplitLine
+class FilterFieldSplit
   include Base
   def process(doc)
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
-        lcount = 1
-        doc[k].to_s.split(/\n/).each do |line|
-          doc.merge!({ "#{k}.f#{lcount}" => line })
-          lcount += 1
+        count = 1
+        doc[k].to_s.split(Regexp.new(v)).each do |thing|
+          doc.merge!({ "#{k}.f#{count}" => thing })
+          count += 1
         end
       end
     end
    [ doc ]
+  end
+end
+
+class FilterFieldSplitLine
+  def initialize(args)
+    super(args.map { |arg| "#{arg}=\\n" } )
   end
 end
 
 class FilterFieldSplitWord
-  include Base
-  def process(doc)
-    self.opts.each_pair do |k,v|
-      if doc.has_key?(k)
-        wcount = 1
-        doc[k].to_s.split(/\W/).each do |word|
-          doc.merge!({ "#{k}.f#{wcount}" => word })
-          wcount += 1
-        end
-      end
-    end
-   [ doc ]
+  def initialize(args)
+    super(args.map { |arg| "#{arg}=\\W" } )
   end
 end
 
 class FilterFieldSplitTab
-  include Base
-  def process(doc)
-    self.opts.each_pair do |k,v|
-      if doc.has_key?(k)
-        wcount = 1
-        doc[k].to_s.split(/\t/).each do |word|
-          doc.merge!({ "#{k}.f#{wcount}" => word })
-          wcount += 1
-        end
-      end
-    end
-   [ doc ]
+  def initialize(args)
+    super(args.map { |arg| "#{arg}=\\t" } )
   end
 end
 
 class FilterFieldSplitComma
-  include Base
-  def process(doc)
-    self.opts.each_pair do |k,v|
-      if doc.has_key?(k)
-        wcount = 1
-        doc[k].to_s.split(/,/).each do |word|
-          doc.merge!({ "#{k}.f#{wcount}" => word })
-          wcount += 1
-        end
-      end
-    end
-   [ doc ]
+  def initialize(args)
+    super(args.map { |arg| "#{arg}=," } )
+  end
+end
+
+class FilterFieldSplitPeriod < FilterFieldSplit
+  def initialize(args)
+    super(args.map { |arg| "#{arg}=\\." } )
   end
 end
 
