@@ -385,25 +385,25 @@ class FilterFieldSplit
   end
 end
 
-class FilterFieldSplitLine
+class FilterFieldSplitLine < FilterFieldSplit
   def initialize(args)
     super(args.map { |arg| "#{arg}=\\n" } )
   end
 end
 
-class FilterFieldSplitWord
+class FilterFieldSplitWord < FilterFieldSplit
   def initialize(args)
     super(args.map { |arg| "#{arg}=\\W" } )
   end
 end
 
-class FilterFieldSplitTab
+class FilterFieldSplitTab < FilterFieldSplit
   def initialize(args)
     super(args.map { |arg| "#{arg}=\\t" } )
   end
 end
 
-class FilterFieldSplitComma
+class FilterFieldSplitComma < FilterFieldSplit
   def initialize(args)
     super(args.map { |arg| "#{arg}=," } )
   end
