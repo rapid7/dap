@@ -151,9 +151,23 @@ describe Dap::Filter::FilterFieldSplit do
     let(:filter) { described_class.new(["value=\\."]) }
 
     context 'splitting on regex boundary' do
-      let(:process) { filter.process({"value": "foo.bar.baf"}) }
+      let(:process) { filter.process({"value" => "foo.bar.baf"}) }
       it 'splits correctly' do
-        expect(process).to eq([{"value": "foo.bar.baf", "value.f1": "foo", "value.f2": "bar", "value.f3": "baf"}])
+        expect(process).to eq([{"value" => "foo.bar.baf", "value.f1" => "foo", "value.f2" => "bar", "value.f3" => "baf"}])
+      end
+    end
+  end
+end
+
+describe Dap::Filter::FilterFieldSplitPeriod do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["value"]) }
+
+    context 'splitting on regex boundary' do
+      let(:process) { filter.process({"value" => "foo.bar.baf"}) }
+      it 'splits correctly' do
+        expect(process).to eq([{"value" => "foo.bar.baf", "value.f1" => "foo", "value.f2" => "bar", "value.f3" => "baf"}])
       end
     end
   end
