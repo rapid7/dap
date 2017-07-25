@@ -77,7 +77,7 @@ class FilterGeoIPOrg
 end
 
 #
-# Add GeoIP ASN tags using the MaxMind GeoIP::ASP database
+# Add GeoIP ASN tags using the MaxMind GeoIP::ASN database
 #
 class FilterGeoIPAsn
   include BaseDecoder
