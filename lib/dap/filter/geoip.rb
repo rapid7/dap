@@ -9,7 +9,7 @@ module GeoIPLibrary
     "/var/lib/geoip"
   ]
   GEOIP_CITY = %W{ geoip.dat geoip_city.dat GeoCity.dat IP_V4_CITY.dat GeoCityLite.dat }
-  GEOIP_ORGS = %W{ geoip_org.dat IP_V4_ORG.dat }
+  GEOIP_ORGS = %W{ GeoIPASNum.dat geoip_org.dat IP_V4_ORG.dat }
   GEOIP_ASN = %W{ GeoIPASNum.dat }
 
   @@geo_city = nil
@@ -34,7 +34,7 @@ module GeoIPLibrary
     GEOIP_ASN.each do |f|
       path = File.join(d, f)
       if ::File.exist?(path)
-        @@geo_asn = GeoIP::ASN.new(path)
+        @@geo_asn = GeoIP::Organization.new(path)
         break
       end
     end
@@ -78,20 +78,16 @@ end
 
 #
 # Add GeoIP ASN tags using the MaxMind GeoIP::ASN database
-#
+# want just AS#### not other stuff
+# also change key to asn so like line.asn not line.name
 class FilterGeoIPAsn
   include BaseDecoder
   include GeoIPLibrary
   def decode(ip)
     return unless @@geo_asn
     geo_hash = @@geo_asn.look_up(ip)
-    return unless geo_hash
-    ret = {}
-    geo_hash.each_pair do |k,v|
-      next unless k
-      ret[k.to_s] = v.to_s
-    end
-    ret
+    return unless (geo_hash and geo_hash[:name])
+    { :asn => geo_hash[:name] }
   end
 end
 
