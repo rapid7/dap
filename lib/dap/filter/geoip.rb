@@ -78,8 +78,7 @@ end
 
 #
 # Add GeoIP ASN tags using the MaxMind GeoIP::ASN database
-# want just AS#### not other stuff
-# also change key to asn so like line.asn not line.name
+# 
 class FilterGeoIPAsn
   include BaseDecoder
   include GeoIPLibrary
@@ -87,7 +86,7 @@ class FilterGeoIPAsn
     return unless @@geo_asn
     geo_hash = @@geo_asn.look_up(ip)
     return unless (geo_hash and geo_hash[:name])
-    { :asn => geo_hash[:name] }
+    { :asn => geo_hash[:name].split(' ')[0] }
   end
 end
 
