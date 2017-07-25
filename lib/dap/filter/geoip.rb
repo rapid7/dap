@@ -35,7 +35,6 @@ module GeoIPLibrary
       path = File.join(d, f)
       if ::File.exist?(path)
         @@geo_asn = GeoIP::Country.new(path)
-        puts GeoIP::ASN.new(path)
         break
       end
     end
