@@ -34,7 +34,7 @@ module GeoIPLibrary
     GEOIP_ASN.each do |f|
       path = File.join(d, f)
       if ::File.exist?(path)
-        @@geo_asn = GeoIP::Country.new(path)
+        @@geo_asn = GeoIP::ASN.new(path)
         break
       end
     end
