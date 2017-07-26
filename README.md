@@ -14,9 +14,9 @@ DAP was written to process terabyte-sized public scan datasets, such as those pr
 
 ### Prerequisites
 
-DAP requires Ruby, and is best suited for systems with a relatively current version,
-preferably one installed and managed by
-[`rbenv`](https://github.com/rbenv/rbenv) or [`rvm`](https://rvm.io/) with the bundler gem installed and up to date.
+DAP requires Ruby, and is best suited for systems with a relatively current version with 2.1.0 being the minimum requirement.
+Ideally, this will be managed with either
+[`rbenv`](https://github.com/rbenv/rbenv) or [`rvm`](https://rvm.io/) with the bundler gem also installed and up to date.
 Using system managed/installed Rubies is possible but fraught with peril.
 
 DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/downloadable/) to be able to append geographic metadata to analyzed datasets.  If you intend on using this capability, run the following as `root`:
