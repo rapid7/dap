@@ -9,7 +9,7 @@ module GeoIPLibrary
     "/var/lib/geoip"
   ]
   GEOIP_CITY = %W{ geoip.dat geoip_city.dat GeoCity.dat IP_V4_CITY.dat GeoCityLite.dat }
-  GEOIP_ORGS = %W{ GeoIPASNum.dat geoip_org.dat IP_V4_ORG.dat }
+  GEOIP_ORGS = %W{ geoip_org.dat IP_V4_ORG.dat }
   GEOIP_ASN = %W{ GeoIPASNum.dat }
 
   @@geo_city = nil
