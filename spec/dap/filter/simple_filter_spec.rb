@@ -127,19 +127,66 @@ end
 describe Dap::Filter::FilterTransform do
   describe '.process' do
 
-    let(:filter) { described_class.new(['foo=reverse']) }
+    context 'reverse' do
+      let(:filter) { described_class.new(['foo=reverse']) }
 
-    context 'ASCII' do
-      let(:process) { filter.process({'foo' => 'abc123'}) }
-      it 'is reversed' do
-        expect(process).to eq(['foo' => '321cba'])
+      context 'ASCII' do
+        let(:process) { filter.process({'foo' => 'abc123'}) }
+        it 'is reversed' do
+          expect(process).to eq(['foo' => '321cba'])
+        end
+      end
+
+      context 'UTF-8' do
+        let(:process) { filter.process({'foo' => '☹☠'}) }
+        it 'is reversed' do
+          expect(process).to eq(['foo' => '☠☹'])
+        end
       end
     end
 
-    context 'UTF-8' do
-      let(:process) { filter.process({'foo' => '☹☠'}) }
-      it 'is reversed' do
-        expect(process).to eq(['foo' => '☠☹'])
+    context 'int default' do
+      let(:filter) { described_class.new(['val=int']) }
+
+      context 'valid int' do
+        let(:process) { filter.process({'val' => '1'}) }
+        it 'is the correct int' do
+          expect(process).to eq(['val' => 1])
+        end
+      end
+
+      context 'invalid int' do
+        let(:process) { filter.process({'val' => 'cats'}) }
+        it 'is the correct int' do
+          expect(process).to eq(['val' => 0])
+        end
+      end
+    end
+
+    context 'int different base' do
+      let(:filter) { described_class.new(['val=int16']) }
+      let(:process) { filter.process({'val' => 'FF'}) }
+
+      it 'is the correct int' do
+        expect(process).to eq(['val' => 255])
+      end
+    end
+
+    context 'float' do
+      let(:filter) { described_class.new(['val=float']) }
+
+      context 'valid float' do
+        let(:process) { filter.process({'val' => '1.0'}) }
+        it 'is the correct float' do
+          expect(process).to eq(['val' => 1.0])
+        end
+      end
+
+      context 'invalid float' do
+        let(:process) { filter.process({'val' => 'cats.0'}) }
+        it 'is the correct float' do
+          expect(process).to eq(['val' => 0.0])
+        end
       end
     end
   end

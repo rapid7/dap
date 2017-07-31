@@ -221,6 +221,15 @@ class FilterTransform
     self.opts.each_pair do |k,v|
       if doc.has_key?(k)
         case v
+        when /^int(?<base>\d+)?$/
+          base = $LAST_MATCH_INFO['base']
+          if base.nil?
+            doc[k] = doc[k].to_s.to_i
+          else
+            doc[k] = doc[k].to_s.to_i(base.to_i)
+          end
+        when 'float'
+          doc[k] = doc[k].to_f
         when 'reverse'
           doc[k] = doc[k].to_s.reverse
         when 'downcase'
