@@ -252,6 +252,8 @@ class FilterTransform
           doc[k] = [ doc[k].to_s ].pack("H*")
         when 'hexencode'
           doc[k] = doc[k].to_s.unpack("H*").first
+        else
+          fail "Invalid transform '#{v}'"
         end
       end
     end
