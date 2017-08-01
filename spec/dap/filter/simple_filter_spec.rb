@@ -127,6 +127,13 @@ end
 describe Dap::Filter::FilterTransform do
   describe '.process' do
 
+    context 'invalid transform' do
+      let(:filter) { described_class.new(['foo=blahblah']) }
+      it 'fails' do
+        expect { filter.process({'foo' => 'abc123'}) }.to raise_error(RuntimeError, /Invalid transform/)
+      end
+    end
+
     context 'reverse' do
       let(:filter) { described_class.new(['foo=reverse']) }
 
