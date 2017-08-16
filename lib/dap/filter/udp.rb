@@ -38,19 +38,40 @@ end
 #
 # Decode a DNS bind.version probe response ( zmap: dns_53.pkt )
 #
+# Note: The TCP DNS response contains two additional bytes at the beginning
+# of the data which indicate length.  Net::DNS::Packet doesn't handle this
+# so we've implemented a fall back that will retry parsing with the first two
+# bytes removed if the initial parsing attempt raises an exception.
+#
 class FilterDecodeDNSVersionReply
   include BaseDecoder
   def decode(data)
     begin
       r = Net::DNS::Packet.parse(data)
-      return if not r
+    rescue
+      r = nil
+    end
 
+    unless r
+      begin
+        # Perhaps a TCP DNS response, trim the first two bytes (length value)
+        # and try again..
+        trimmed_data = data[2..-1]
+        r = Net::DNS::Packet.parse(trimmed_data)
+      rescue
+        return {}
+      end
+    end
+
+    return {} unless r
+
+    begin
       # XXX: This can throw an exception on bad data
       vers = r.answer.map{|x| x.txt.strip rescue nil }.reject{|x| x.nil? }.first
-      return if not vers
-      return { "dns_version" => vers }
+      return {} unless vers
+      return { 'dns_version' => vers }
     rescue ::Exception
-      { }
+      {}
     end
   end
 end
