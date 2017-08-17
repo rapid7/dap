@@ -265,7 +265,7 @@ end
 describe Dap::Filter::FilterWhereRegex do
   describe '.process' do
 
-    let(:filter) { described_class.new(["value", "^foo-([\d\.]+)$"]) }
+    let(:filter) { described_class.new(["value", "^foo-([\\d\\.]+)$"]) }
 
     context 'matches when it should' do
       let(:process) { filter.process({"value" => "foo-1.2.3.4"}) }
