@@ -159,6 +159,22 @@ class FilterWhere
   end
 end
 
+class FilterWhereRegex
+  attr_accessor :field, :re
+
+
+  def initialize(args)
+    fail "Expected 2 arguments to 'where' but got #{args.size}" unless args.size == 2
+    self.re = Regexp.new(args.last)
+    self.field = args.first
+  end
+
+  def process(doc)
+    return [ doc ] if doc.has_key?(self.field) && doc[self.field] =~ self.re
+    [ ]
+  end
+end
+
 class FilterExclude
   include Base
   def process(doc)

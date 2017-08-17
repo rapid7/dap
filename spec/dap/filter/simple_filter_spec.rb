@@ -240,3 +240,45 @@ describe Dap::Filter::FilterFieldSplitLine do
     end
   end
 end
+
+describe Dap::Filter::FilterWhere do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["value", "==", "1"]) }
+
+    context 'matches when it should' do
+      let(:process) { filter.process({"value" => "1"}) }
+      it 'matches' do
+        expect(process).to eq([{"value" => "1"}])
+      end
+    end
+
+    context 'does not match when it should not' do
+      let(:process) { filter.process({"value" => "2"}) }
+      it 'does not match' do
+        expect(process).to eq([])
+      end
+    end
+  end
+end
+
+describe Dap::Filter::FilterWhereRegex do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["value", "^foo-([\\d\\.]+)$"]) }
+
+    context 'matches when it should' do
+      let(:process) { filter.process({"value" => "foo-1.2.3.4"}) }
+      it 'matches' do
+        expect(process).to eq([{"value" => "foo-1.2.3.4"}])
+      end
+    end
+
+    context 'does not match matches when it should not' do
+      let(:process) { filter.process({"value" => "2"}) }
+      it 'does not match' do
+        expect(process).to eq([])
+      end
+    end
+  end
+end
