@@ -48,7 +48,7 @@ class FilterDecodeDNSVersionReply
   def decode(data)
     begin
       r = Net::DNS::Packet.parse(data)
-    rescue
+    rescue ::Exception
       r = nil
     end
 
@@ -58,7 +58,7 @@ class FilterDecodeDNSVersionReply
         # and try again..
         trimmed_data = data[2..-1]
         r = Net::DNS::Packet.parse(trimmed_data)
-      rescue
+      rescue ::Exception
         return {}
       end
     end
