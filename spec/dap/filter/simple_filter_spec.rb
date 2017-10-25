@@ -196,6 +196,23 @@ describe Dap::Filter::FilterTransform do
         end
       end
     end
+
+    context 'json' do
+      let(:filter) { described_class.new(['val=json']) }
+
+      context 'valid json' do
+        let(:process) { filter.process({'val' => '{"nested": "1"}'}) }
+        it 'is the correct JSON' do
+          expect(process).to eq(['val' => { 'nested' => '1' }])
+        end
+      end
+
+      context 'invalid json' do
+        it 'raises on invalid JSON' do
+          expect { filter.process({'val' => '{abc123'}) }.to raise_error(JSON::ParserError)
+        end
+      end
+    end
   end
 end
 
