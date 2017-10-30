@@ -1,6 +1,7 @@
 require 'digest/sha1'
 require 'digest/md5'
 require 'digest/sha2'
+require 'json'
 
 module Dap
 module Filter
@@ -238,6 +239,8 @@ class FilterTransform
           doc[k] = doc[k].to_s.upcase
         when 'ascii'
           doc[k] = doc[k].to_s.gsub(/[\x00-\x1f\x7f-\xff]/n, '')
+        when 'json'
+          doc[k] = JSON.parse(doc[k].to_s)
         when 'utf8encode'
           doc[k] = doc[k].to_s.encode!('UTF-8', invalid: :replace, undef: :replace, replace: '')
         when 'base64decode'
