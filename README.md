@@ -26,10 +26,10 @@ sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.ma
 
 ```
 
-### Ubuntu
+### Ubuntu 16.04
 
 ```bash
-sudo apt-get install libgeoip-dev
+sudo apt-get install libgeoip-dev zlib1g-dev ruby ruby-dev gcc make ruby-bundler
 gem install dap
 ```
 
