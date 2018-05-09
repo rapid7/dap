@@ -105,6 +105,8 @@ class FilterDecodeWDBRPC_Reply
     return info unless head.to_s.length == 36
     return unless buff.length > 0
     info['agent_ver'] = Dap::Proto::WDBRPC.wdbrpc_decode_str(buff)
+    # if this isn't a recoginized version string, it is likely part of an invalid response and should be skipped
+    return unless info['agent_ver'] =~ /^\d+\.\d+(?:\.\d+)*(?:-alpha)?$/
     info['agent_mtu'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
     info['agent_mod'] = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
     info['rt_type']          = Dap::Proto::WDBRPC.wdbrpc_decode_int(buff)
