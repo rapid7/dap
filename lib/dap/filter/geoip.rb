@@ -4,7 +4,7 @@ module Dap
 module Filter
 
 module GeoIPLibrary
-  GEOIP_DIRS = [ 
+  GEOIP_DIRS = [
     File.expand_path( File.join( File.dirname(__FILE__), "..", "..", "..", "data")),
     "/var/lib/geoip"
   ]
@@ -38,18 +38,20 @@ module GeoIPLibrary
         break
       end
     end
-  end  
+  end
 end
 
 
 #
-# Add GeoIP tags using the MaxMind GeoIP::City 
+# Add GeoIP tags using the MaxMind GeoIP::City
 #
 class FilterGeoIP
   include BaseDecoder
   include GeoIPLibrary
   def decode(ip)
-    return unless @@geo_city
+    unless @@geo_city
+      raise "No MaxMind GeoIP::City data found"
+    end
     geo_hash = @@geo_city.look_up(ip)
     return unless geo_hash
     ret = {}
@@ -57,7 +59,7 @@ class FilterGeoIP
       next unless k
       ret[k.to_s] = v.to_s
     end
-    
+
     ret
   end
 end
@@ -69,7 +71,9 @@ class FilterGeoIPOrg
   include BaseDecoder
   include GeoIPLibrary
   def decode(ip)
-    return unless @@geo_orgs
+    unless @@geo_orgs
+      raise "No MaxMind GeoIP::Organization data found"
+    end
     geo_hash = @@geo_orgs.look_up(ip)
     return unless (geo_hash and geo_hash[:name])
     { :org => geo_hash[:name] }
@@ -78,12 +82,14 @@ end
 
 #
 # Add GeoIP ASN tags using the MaxMind GeoIP::ASN database
-# 
+#
 class FilterGeoIPAsn
   include BaseDecoder
   include GeoIPLibrary
   def decode(ip)
-    return unless @@geo_asn
+    unless @@geo_asn
+      raise "No MaxMind GeoIP::ASN data found"
+    end
     geo_hash = @@geo_asn.look_up(ip)
     return unless (geo_hash and geo_hash[:name])
     { :asn => geo_hash[:name].split(' ')[0] }
