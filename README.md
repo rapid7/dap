@@ -22,7 +22,7 @@ Using system managed/installed Rubies is possible but fraught with peril.
 DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/downloadable/) to be able to append geographic metadata to analyzed datasets.  If you intend on using this capability, run the following as `root`:
 
 ```bash
-sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo mv GeoLiteCity.dat geoip.dat && sudo wget http://geolite.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz && sudo gunzip GeoIPASNum.dat.gz
+sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo wget http://geolite.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz && sudo gunzip GeoIPASNum.dat.gz
 
 ```
 
