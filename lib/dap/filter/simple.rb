@@ -237,6 +237,12 @@ class FilterTransform
           doc[k] = doc[k].to_s.downcase
         when 'upcase'
           doc[k] = doc[k].to_s.upcase
+        when /^(lstrip|ltrim)$/
+          doc[k] = doc[k].to_s.lstrip
+        when /^(rstrip|rtrim)$/
+          doc[k] = doc[k].to_s.rstrip
+        when /^(strip|trim)$/
+          doc[k] = doc[k].to_s.strip
         when 'ascii'
           doc[k] = doc[k].to_s.gsub(/[\x00-\x1f\x7f-\xff]/n, '')
         when 'json'
