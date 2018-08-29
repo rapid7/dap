@@ -107,6 +107,24 @@ class FilterMatchSelect
   end
 end
 
+class FilterMatchSelectKey < FilterMatchSelect
+end
+
+class FilterMatchSelectValue
+  include Base
+  def process(doc)
+    ndoc = {}
+    self.opts.each_pair do |re,|
+      doc.each_key do |k|
+        if doc[k].match(re)
+          ndoc[k] = doc[k]
+        end
+      end
+    end
+   (ndoc.keys.length == 0) ? [] : [ ndoc ]
+  end
+end
+
 class FilterSelect
   include Base
   def process(doc)
