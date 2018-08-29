@@ -213,6 +213,32 @@ describe Dap::Filter::FilterTransform do
         end
       end
     end
+
+    context 'stripping' do
+      context 'lstrip' do
+        let(:filter) { described_class.new(['foo=lstrip']) }
+        let(:process) { filter.process({'foo' => ' abc123  '}) }
+        it 'lstripped' do
+          expect(process).to eq(['foo' => 'abc123  '])
+        end
+      end
+
+      context 'rstrip' do
+        let(:filter) { described_class.new(['foo=rstrip']) }
+        let(:process) { filter.process({'foo' => ' abc123  '}) }
+        it 'rstripped' do
+          expect(process).to eq(['foo' => ' abc123'])
+        end
+      end
+
+      context 'strip' do
+        let(:filter) { described_class.new(['foo=strip']) }
+        let(:process) { filter.process({'foo' => ' abc123  '}) }
+        it 'stripped' do
+          expect(process).to eq(['foo' => 'abc123'])
+        end
+      end
+    end
   end
 end
 
