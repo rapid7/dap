@@ -83,7 +83,17 @@ class FilterDecodeUPNP_SSDP_Reply
   include BaseDecoder
   def decode(data)
     head = { }
-    data.split(/\n/).each do |line|
+    lines = data.split(/\r?\n/)
+    return if lines.empty?
+    if /^HTTP\/\d+\.\d+\s+(?<http_code>\d+)(?:\s+(?<http_message>.*))?/ =~ lines.first
+      head["upnp_http_code"] = http_code
+      head["upnp_http_message"] = http_message
+    else
+      return
+    end
+
+    lines.shift
+    lines.each do |line|
       k,v = line.strip.split(':', 2)
       next if not k
       head["upnp_#{k.downcase}"] = (v.to_s.strip)
