@@ -270,16 +270,26 @@ describe Dap::Filter::FilterTransform do
   end
 end
 
-describe Dap::Filter::FilterFieldSplit do
+describe Dap::Filter::FilterFieldReplace do
   describe '.process' do
 
-    let(:filter) { described_class.new(["value=\\."]) }
+    let(:filter) { described_class.new(["value1=foo=bar"]) }
 
-    context 'splitting on regex boundary' do
-      let(:process) { filter.process({"value" => "foo.bar.baf"}) }
-      it 'splits correctly' do
-        expect(process).to eq([{"value" => "foo.bar.baf", "value.f1" => "foo", "value.f2" => "bar", "value.f3" => "baf"}])
-      end
+    let(:process) { filter.process({"value1" => "foo.bar.foo", "value2" => "secret"}) }
+    it 'replaced correctly' do
+      expect(process).to eq([{"value1" => "bar.bar.foo", "value2" => "secret"}])
+    end
+  end
+end
+
+describe Dap::Filter::FilterFieldReplaceAll do
+  describe '.process' do
+
+    let(:filter) { described_class.new(["value1=foo=bar"]) }
+
+    let(:process) { filter.process({"value1" => "foo.bar.foo", "value2" => "secret"}) }
+    it 'replaced correctly' do
+      expect(process).to eq([{"value1" => "bar.bar.bar", "value2" => "secret"}])
     end
   end
 end

@@ -41,6 +41,41 @@ class FilterRename
   end
 end
 
+class FilterFieldReplace
+  include Base
+  attr_accessor :all
+
+  def initialize(args, all=false)
+    self.all = all
+    super(args)
+    missing_replace = self.opts.select { |k, v| v.nil? }.keys
+    unless missing_replace.empty?
+      fail "Missing search/replace for #{missing_replace.join(',')}"
+    end
+  end
+
+  def process(doc)
+    self.opts.each_pair do |k,v|
+      if doc.has_key?(k)
+        search, replace = v.split('=', 2)
+        search = Regexp.new(search)
+        if self.all
+          doc[k] = doc[k].gsub(search, replace)
+        else
+          doc[k] = doc[k].sub(search, replace)
+        end
+      end
+  end
+   [ doc ]
+  end
+end
+
+class FilterFieldReplaceAll < FilterFieldReplace
+  def initialize(args)
+    super(args, all=true)
+  end
+end
+
 # Example below replaces periods with underscores in the names of all keys
 # one level below 'my_key'
 # rename_subkey_match my_key '.' '_'
