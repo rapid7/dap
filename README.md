@@ -54,7 +54,7 @@ Uage: dap  [input] + [filter] + [output]
 
 To see which input/output formats are supported and what filters are available, run `dap --inputs`,`dap --outputs` or `dap --filters`, respectively.
 
-This example reads as input a single IP address from `STDIN` in line form, applies geo-ip transofmrations as a filter on that line, and then returns the output as JSON:
+This example reads as input a single IP address from `STDIN` in line form, applies geo-ip transformations as a filter on that line, and then returns the output as JSON:
 
 ```
 $  echo 8.8.8.8 | bin/dap + lines + geo_ip line + json
