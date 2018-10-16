@@ -64,7 +64,7 @@ module Input
       begin
         json = Oj.load(line.strip, mode: :strict)
       rescue
-        $stderr.puts "Record is not valid JSON and will be skipped: '#{line}'"
+        $stderr.puts "Record is not valid JSON and will be skipped: '#{line.chomp}'"
         return Error::InvalidFormat
       end
       return Error::Empty unless json
