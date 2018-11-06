@@ -35,6 +35,8 @@ class FilterDecodeLdapSearchResult
     messages.each do |element|
       begin
         elem_decoded = OpenSSL::ASN1.decode(element)
+        parsed_type, parsed_data = Dap::Proto::LDAP.parse_message(elem_decoded)
+        info[parsed_type] = parsed_data if parsed_type && parsed_data
       rescue Exception => e
         err_msg = 'FilterDecodeLdapSearchResult - Unable to decode ASN.1 element'
         $stderr.puts "#{err_msg}: #{e}"
@@ -44,8 +46,6 @@ class FilterDecodeLdapSearchResult
         info['Error'] = { 'errorMessage' => err_msg }
         next
       end
-      parsed_type, parsed_data = Dap::Proto::LDAP.parse_message(elem_decoded)
-      info[parsed_type] = parsed_data if parsed_type && parsed_data
     end
 
     info
