@@ -10,6 +10,13 @@ DAP reads data using an input plugin, transforms it through a series of filters,
 DAP was written to process terabyte-sized public scan datasets, such as those provided by https://scans.io/. Although DAP isn't particularly fast, it can be used across multiple cores (and machines) by splitting the input source and wrapping the execution with GNU Parallel.
 
 
+## Building dap
+```bash
+gem install bundler
+bundle install
+rake install
+```
+
 ## Installation
 
 ### Prerequisites
