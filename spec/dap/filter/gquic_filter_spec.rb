@@ -1,4 +1,4 @@
-describe Dap::Filter::FilterDecodeGQuicVersionsResult do
+describe Dap::Filter::FilterDecodeGquicVersionsResult do
   describe '.decode' do
 
     let(:filter) { described_class.new(['data']) }
