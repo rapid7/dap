@@ -2,7 +2,7 @@ module Dap
    module Filter
 
       #
-      # Decode an Quic VersionsRequest probe response
+      # Decode a Google Quic VersionsRequest probe response
       #
       class FilterDecodeGQuicVersionsResult
         include BaseDecoder

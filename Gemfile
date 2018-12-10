@@ -1,6 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'yard'
 gem 'oj'
 gem 'htmlentities'
 gem 'net-dns'
