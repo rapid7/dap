@@ -26,14 +26,6 @@ DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/do
 sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo wget http://geolite.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz && sudo gunzip GeoIPASNum.dat.gz
 
 ```
-
-### Install from git repo
-```bash
-gem install bundler
-bundle install
-rake install
-```
-
 ### Ubuntu 16.04
 
 ```bash
