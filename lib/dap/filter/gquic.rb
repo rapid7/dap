@@ -4,18 +4,18 @@ module Dap
       #
       # Decode an Quic VersionsRequest probe response
       #
-      class FilterDecodeQuicVersionsResult
+      class FilterDecodeGQuicVersionsResult
         include BaseDecoder
 
         #
-        # Decode an QUIC versions probe response
+        # Decode an GQUIC ( Google Quic) versions probe response
         #
         # @param data [String] Binary string containing raw response from server
-        # @return [List] Hash containing all LDAP responses
+        # @return [Hash] containing all GQUIC versions supported else nil
         #
         def decode(data)
            # need to skip 9 bytes and assume at least one valid version Q044
-           if data.length > 9 + 4 and (data.length - 9) % 4
+           if data.length > 9 + 4 && (data.length - 9) % 4
               versions = []
               i = 9
               step = 4
