@@ -81,7 +81,7 @@ Finally, submit the PR.  Navigate to ```https://github.com/<your-github-username
 
 ### Testing
 
-When your PR is submitted, it will be automatically subjected to the full run of tests in [Travis](https://travis-ci.org/rapid7/dap/), however you are encourage to perform testing _before_ submitting the PR.  To do this, simply run `rake tests`.
+When your PR is submitted, it will be automatically subjected to the full run of tests in [Travis](https://travis-ci.org/rapid7/dap/), however you are encourage to perform testing _before_ submitting the PR.  To do this, simply run `bundle exec rspec spec`.
 
 ## Landing PRs
 
