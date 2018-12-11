@@ -81,7 +81,7 @@ Finally, submit the PR.  Navigate to ```https://github.com/<your-github-username
 
 ### Testing
 
-When your PR is submitted, it will be automatically subjected to the full run of tests in [Travis](https://travis-ci.org/rapid7/dap/), however you are encourage to perform testing _before_ submitting the PR.  To do this, simply run `rake tests`.
+When your PR is submitted, it will be automatically subjected to the full run of tests in [Travis](https://travis-ci.org/rapid7/dap/), however you are encourage to perform testing _before_ submitting the PR.  To do this, simply run `bundle exec rspec spec`.
 
 ## Landing PRs
 
@@ -138,3 +138,7 @@ When a new version of dap is to be released, you _must_ follow the instructions 
 2. Edit [lib/dap/version.rb](https://github.com/rapid7/dap/blob/master/lib/dap/version.rb) and increment ```VERSION```.  Commit and push to rapid7/dap master.
 3. Run `rake release`.  Among other things, this creates the new gem, uploads it to Rubygems and tags the release with a tag like `v<VERSION>`, where `<VERSION>` is replaced with the version from `version.rb`.  For example, if you release version 1.2.3 of the gem, the tag will be `v1.2.3`.
 4. If your default remote repository is not `rapid7/dap`, you must ensure that the tags created in the previous step are also pushed to the right location(s).  For example, if `origin` is your fork of dap and `upstream` is `rapid7/master`, you should run `git push --tags --dry-run upstream` to confirm what tags will be pushed and then `git push --tags upstream` to push the tags.
+
+## Misc tips on building dap
+
+Ruby often comes prepackaged on linux/mac os systems. Although the README already mentions using rbenv, it useful to make sure your envoiroment is actually using the rbenv version of ruby, gem, & bundler before running any ruby commands such as gem, bundle, ruby or dap itself utilizing the which command.

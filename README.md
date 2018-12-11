@@ -10,6 +10,7 @@ DAP reads data using an input plugin, transforms it through a series of filters,
 DAP was written to process terabyte-sized public scan datasets, such as those provided by https://scans.io/. Although DAP isn't particularly fast, it can be used across multiple cores (and machines) by splitting the input source and wrapping the execution with GNU Parallel.
 
 
+
 ## Installation
 
 ### Prerequisites
@@ -25,7 +26,6 @@ DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/do
 sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo wget http://geolite.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz && sudo gunzip GeoIPASNum.dat.gz
 
 ```
-
 ### Ubuntu 16.04
 
 ```bash
