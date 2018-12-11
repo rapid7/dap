@@ -141,4 +141,4 @@ When a new version of dap is to be released, you _must_ follow the instructions 
 
 ## Misc tips on building dap
 
-Ruby often comes prepackaged on linux/mac os systems. Although the README already mentions using rbenv, it useful to make sure your envoiroment is actually using the rbenv version of ruby, gem, & bundler before running any ruby commands such as gem, bundle, ruby or dap itself utilizing the which command.
+Ruby often comes prepackaged on linux/mac os systems. Although the README already mentions using `rbenv`, it useful to make sure your envoiroment is actually using `rbenv` before running any ruby commands such as `gem`, `bundle`, `ruby` or `dap` itself utilizing the `which` command to confirm that the their paths indicate they came from `rbenv`.
