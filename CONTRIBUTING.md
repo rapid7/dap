@@ -141,23 +141,4 @@ When a new version of dap is to be released, you _must_ follow the instructions 
 
 ## Misc tips on building dap
 
-Ruby often comes prepackaged on linux/mac os systems. Although the README already mentions using rbenv, it useful to make sure your envoiroment is actually using the rbenv version of ruby, gem, & bundler running ```bundle install```:
-
-```
-$ which rbenv
-/usr/local/bin/rbenv
-
-$ which gem
-/Users/<user>/.rbenv/shims/gem
-
-$ which bundler
-/Users/<user>/.rbenv/shims/bundler
-
-$ which ruby
-/Users/<user>/.rbenv/shims/ruby
-```
-
-Load rbenv automatically by appending the following to ~/.bash_profile:
-```
-eval "$(rbenv init -)"
-```
+Ruby often comes prepackaged on linux/mac os systems. Although the README already mentions using rbenv, it useful to make sure your envoiroment is actually using the rbenv version of ruby, gem, & bundler before running any ruby commands such as gem, bundle, ruby or dap itself utilizing the which command.
