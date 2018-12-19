@@ -28,7 +28,7 @@ module Dap
                  if version[0] == 'Q'
                     begin
                         # try to convert parse number from string
-                        print(Integer(version[1..3], 10))
+                        Integer(version[1..3], 10)
                         versions.push(version)
                     rescue
                     end
