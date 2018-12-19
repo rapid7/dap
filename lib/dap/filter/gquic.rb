@@ -24,14 +24,9 @@ module Dap
               step = 4
               while i < data.length 
                  version = data[i..i+4-1]
-                 # Versions start with the letter Q
-                 if version[0] == 'Q'
-                    begin
-                        # try to convert parse number from string
-                        Integer(version[1..3], 10)
-                        versions.push(version)
-                    rescue
-                    end
+                 # Versions start with the letter Q followed by number e.g. 001 - 043
+                 if version =~ /^Q\d{3}$/
+                     versions.push(version)
                  end
                  i = i + step
               end
