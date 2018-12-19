@@ -1,3 +1,5 @@
+# Documentation on what the different gquic values are
+# https://github.com/quicwg/base-drafts/wiki/QUIC-Versions
 module Dap
    module Filter
 
@@ -23,8 +25,13 @@ module Dap
               while i < data.length 
                  version = data[i..i+4-1]
                  # Versions start with the letter Q
-                 if data[i] == 'Q'
-                    versions.push(version)
+                 if version[0] == 'Q'
+                    begin
+                        # try to convert parse number from string
+                        print(Integer(version[1..3], 10))
+                        versions.push(version)
+                    rescue
+                    end
                  end
                  i = i + step
               end
