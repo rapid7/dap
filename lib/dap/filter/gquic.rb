@@ -1,3 +1,5 @@
+# Documentation on what the different gquic values are
+# https://github.com/quicwg/base-drafts/wiki/QUIC-Versions
 module Dap
    module Filter
 
@@ -22,9 +24,9 @@ module Dap
               step = 4
               while i < data.length 
                  version = data[i..i+4-1]
-                 # Versions start with the letter Q
-                 if data[i] == 'Q'
-                    versions.push(version)
+                 # Versions start with the letter Q followed by number e.g. 001 - 043
+                 if version =~ /^Q\d{3}$/
+                     versions.push(version)
                  end
                  i = i + step
               end
