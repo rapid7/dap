@@ -1,3 +1,3 @@
 module Dap
-  VERSION = "0.1.24"
+  VERSION = "1.0.0"
 end
