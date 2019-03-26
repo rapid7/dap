@@ -7,7 +7,7 @@ describe Dap::Proto::LDAP do
 
       let(:decode_len) { subject.decode_elem_length(data) }
       it 'returns a Fixnum' do
-        expect(decode_len.class).to eq(::Fixnum)
+        expect(decode_len.class).to eq(::Integer)
       end
       it 'returns value correctly' do
         expect(decode_len).to eq(22)
@@ -19,7 +19,7 @@ describe Dap::Proto::LDAP do
 
       let(:decode_len) { subject.decode_elem_length(data) }
       it 'returns a Fixnum' do
-        expect(decode_len.class).to eq(::Fixnum)
+        expect(decode_len.class).to eq(::Integer)
       end
       it 'returns value correctly' do
         expect(decode_len).to eq(3015)
@@ -31,7 +31,7 @@ describe Dap::Proto::LDAP do
 
       let(:decode_len) { subject.decode_elem_length(data) }
       it 'returns a Fixnum' do
-        expect(decode_len.class).to eq(::Fixnum)
+        expect(decode_len.class).to eq(::Integer)
       end
       it 'returns value correctly' do
         expect(decode_len).to eq(89613)

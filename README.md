@@ -46,7 +46,7 @@ gem install dap
 In its simplest form, DAP takes input, applies zero or more filters which modify the input, and then outputs the result.  The input, filters and output are separated by plus signs (`+`).  As seen from `dap -h`:
 
 ```
-Uage: dap  [input] + [filter] + [output]
+Usage: dap  [input] + [filter] + [output]
        --inputs
        --outputs
        --filters
