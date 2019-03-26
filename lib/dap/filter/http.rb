@@ -248,12 +248,10 @@ class FilterDecodeHTTPReply
             headers["http_powered"] = header_value
 
           when 'date'
-            d = DateTime.parse(header_value) rescue nil
-            headers["http_date"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+            headers["http_date"] = header_value
 
           when 'last-modified'
-            d = DateTime.parse(header_value) rescue nil
-            headers["http_modified"] = d.to_time.utc.strftime("%Y%m%dT%H:%M:%S%z") if d
+            headers["http_modified"] = header_value
 
           when 'location'
             headers["http_location"] = header_value
