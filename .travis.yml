@@ -10,3 +10,13 @@ addons:
     - libgeoip-dev
     - libgeoip1
 script: bundle exec rspec spec
+
+services:
+  - docker
+
+before_install:
+  - docker build -t dap_bats -f Dockerfile.testing .
+
+script:
+  - docker build -t dap_bats -f Dockerfile.testing .
+  - docker run --rm --name dap_bats -it -e DAP_EXECUTABLE=dap dap_bats /bin/bash -c "find . -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"

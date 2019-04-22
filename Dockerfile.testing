@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 ENV TEST_DIR /opt/bats_testing
 RUN apt-get update
-RUN apt-get install -y build-essential ca-certificates curl git libffi-dev libgeoip-dev libxml2-dev wget zlib1g-dev
+RUN apt-get install -y build-essential ca-certificates curl git jq libffi-dev libgeoip-dev libxml2-dev wget zlib1g-dev
 
 # install rvm and necessary ruby bits
 RUN command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
