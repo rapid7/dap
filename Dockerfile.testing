@@ -27,6 +27,3 @@ RUN git clone https://github.com/sstephenson/bats.git && cd bats && ./install.sh
 
 WORKDIR /opt/bats_testing
 COPY . .
-
-# find and run all .bats files
-ENTRYPOINT /bin/bash -l -c "rvm use 2.4.5 && gem build dap && gem install dap*.gem  && find /opt/bats_testing -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"

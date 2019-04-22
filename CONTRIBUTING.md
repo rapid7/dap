@@ -88,15 +88,13 @@ run `bundle exec rspec spec`.  # Testing
 
 There are two testing frameworks in place.
 
-* Ruby rspec.  To run these tests outside of travis-ci:
-```
-bundle exec rspec spec
-```
+* Ruby `rspec`
+* [bats](https://github.com/sstephenson/bats) integration tests
 
-* [bats](https://github.com/sstephenson/bats) integration tests.  To run these tests outside of travis-ci:
+To run these outside of travis-ci, run:
 ```
-docker build -t dap_bats -f Dockerfile.testing . && \
-docker run --rm --name dap_bats -it -e DAP_EXECUTABLE=dap dap_bats /bin/bash -c "find . -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"
+docker build -t dap_testing -f Dockerfile.testing . && \
+docker run --rm --name dap_testing -it -e DAP_EXECUTABLE=dap dap_testing /bin/bash -l -c "rvm use 2.4.5 && gem build dap && gem install dap*.gem && bundle exec rspec spec && find /opt/bats_testing -name \*.bats | grep -v test/ test_helper/ | xargs -n1 bats"
 ```
 
 ## Landing PRs
