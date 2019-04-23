@@ -15,7 +15,6 @@ function teardown_workdir() {
 }
 
 function setup() {
-  export PATH=/go/bin:/usr/local/go/bin:$PATH
   setup_workdir
 }
 
