@@ -1,12 +1,11 @@
-language: ruby
-cache: bundler
-sudo: false
-rvm:
-  - 2.4.5
-  - 2.5.3
-addons:
-  apt:
-    packages:
-    - libgeoip-dev
-    - libgeoip1
-script: bundle exec rspec spec
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t dap_testing -f Dockerfile.testing .
+
+script:
+  - docker build -t dap_testing -f Dockerfile.testing .
+  - docker run --rm --name dap_testing -it -e DAP_EXECUTABLE=dap dap_testing /bin/bash -l -c "rvm use 2.4.5 && gem build dap && gem install dap*.gem && bundle exec rspec spec && find /opt/bats_testing -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"

@@ -1,0 +1,29 @@
+FROM ubuntu:18.04
+
+ENV TEST_DIR /opt/bats_testing
+RUN apt-get update
+RUN apt-get install -y build-essential ca-certificates curl git jq libffi-dev libgeoip-dev libxml2-dev wget zlib1g-dev
+
+# install rvm and necessary ruby bits
+RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+RUN curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
+RUN curl -sSL https://get.rvm.io | bash -s stable
+RUN /bin/bash -l -c "rvm requirements"
+RUN /bin/bash -l -c "rvm install 2.4.5"
+RUN /bin/bash -l -c "rvm use 2.4.5 && gem update --system && gem install bundler"
+ADD Gemfile* $TEST_DIR/
+RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.4.5 && bundle install"
+
+# install maxmind data
+RUN mkdir /var/lib/geoip
+WORKDIR /var/lib/geoip
+RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIP.dat
+RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPCity.dat -O GeoLiteCity.dat
+RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPASNum.dat
+RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPOrg.dat -O geoip_org.dat
+
+# install bats
+RUN git clone https://github.com/sstephenson/bats.git && cd bats && ./install.sh /usr
+
+WORKDIR /opt/bats_testing
+COPY . .
