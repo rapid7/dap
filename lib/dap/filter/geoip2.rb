@@ -3,6 +3,8 @@ require 'maxmind/db'
 module Dap
 module Filter
 
+require 'dap/utils/misc'
+
 module GeoIP2Library
   GEOIP_DIRS = [
     File.expand_path( File.join( File.dirname(__FILE__), "..", "..", "..", "data")),
@@ -44,36 +46,8 @@ class FilterGeoIP2
     unless @@geo_city
       raise "No MaxMind GeoIP2::City data found"
     end
-    geo_hash = @@geo_city.get(ip)
-    return unless geo_hash
-    ret = {}
-    geo_hash.each_pair do |k,v|
-      next unless k
-      if v.is_a?(Hash)
-        flatten_hash(v).each_pair do |fk,fv|
-          ret["#{k}.#{fk}"] = fv.to_s
-        end
-      else
-        ret[k] = v.to_s
-      end
-    end
-
-    ret
-  end
-
-  def flatten_hash(h)
-    ret = {}
-    h.each_pair do |k,v|
-      next unless k
-      if v.is_a?(Hash)
-        flatten_hash(v).each_pair do |fk,fv|
-          ret["#{k}.#{fk}"] = fv.to_s
-        end
-      else
-        ret[k] = v.to_s
-      end
-    end
-    ret
+    return unless (geo_hash = @@geo_city.get(ip))
+    return Dap::Utils::Misc.flatten_hash(geo_hash)
   end
 end
 
