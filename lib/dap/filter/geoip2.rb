@@ -84,7 +84,7 @@ class FilterGeoIP2Asn
     end
     geo_hash = @@geo_asn.get(ip)
     return unless (geo_hash and geo_hash['autonomous_system_number'])
-    { :asn => geo_hash['autonomous_system_number'].to_s }
+    { :asn => "AS#{geo_hash['autonomous_system_number']}" }
   end
 end
 

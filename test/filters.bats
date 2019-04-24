@@ -148,7 +148,11 @@ load ./test_common
 @test "geo_ip2_asn" {
   run bash -c "echo 12.81.92.0 | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
-  assert_output '{"line":"12.81.92.0","line.asn":"7018"}'
+  assert_output '{"line":"12.81.92.0","line.asn":"AS7018"}'
+
+  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"2600:7000::","line.asn":"AS6939"}'
 }
 
 @test "geo_ip2" {
@@ -159,16 +163,6 @@ load ./test_common
   run bash -c "echo 2a02:f800:: | $DAP_EXECUTABLE lines + geo_ip2 line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2a02:f800::","line.asn":"7018"}'
-}
-
-@test "geo_ip2_asn" {
-  run bash -c "echo 12.81.92.0 | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"12.81.92.0","line.asn":"7018"}'
-
-  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"2600:7000::","line.asn":"6939"}'
 }
 
 @test "geo_ip2_org" {
