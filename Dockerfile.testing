@@ -14,13 +14,19 @@ RUN /bin/bash -l -c "rvm use 2.4.5 && gem update --system && gem install bundler
 ADD Gemfile* $TEST_DIR/
 RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.4.5 && bundle install"
 
-# install maxmind data
+# install maxmind legacy data
 RUN mkdir /var/lib/geoip
 WORKDIR /var/lib/geoip
 RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIP.dat
 RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPCity.dat -O GeoLiteCity.dat
 RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPASNum.dat
 RUN wget -q https://github.com/maxmind/geoip-api-php/raw/master/tests/data/GeoIPOrg.dat -O geoip_org.dat
+
+# install maxmind geoip2 data
+RUN mkdir /var/lib/geoip2
+WORKDIR /var/lib/geoip2
+RUN wget -q https://github.com/maxmind/MaxMind-DB/blob/f6ed981c23b0eb33d7c07568e2177236252afda6/test-data/GeoLite2-ASN-Test.mmdb?raw=true -O GeoLite2-ASN.mmdb
+RUN wget -q https://github.com/maxmind/MaxMind-DB/blob/f6ed981c23b0eb33d7c07568e2177236252afda6/test-data/GeoIP2-City-Test.mmdb?raw=true -O GeoLite2-City.mmdb
 
 # install bats
 RUN git clone https://github.com/sstephenson/bats.git && cd bats && ./install.sh /usr
