@@ -145,12 +145,12 @@ load ./test_common
   assert_output '{"line":"12.87.118.0","line.asn":"AS7018"}'
 }
 
-@test "geo_ip2" {
-  run bash -c "echo 67.43.156.0 | $DAP_EXECUTABLE lines + geo_ip2 line + json | jq -Sc -r ."
+@test "geo_ip2_city" {
+  run bash -c "echo 67.43.156.0 | $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"67.43.156.0","line.continent.code":"AS","line.continent.geoname_id":"6255147","line.continent.names.de":"Asien","line.continent.names.en":"Asia","line.continent.names.es":"Asia","line.continent.names.fr":"Asie","line.continent.names.ja":"アジア","line.continent.names.pt-BR":"Ásia","line.continent.names.ru":"Азия","line.continent.names.zh-CN":"亚洲","line.country.geoname_id":"1252634","line.country.iso_code":"BT","line.country.names.de":"Bhutan","line.country.names.en":"Bhutan","line.country.names.es":"Bután","line.country.names.fr":"Bhutan","line.country.names.ja":"ブータン王国","line.country.names.pt-BR":"Butão","line.country.names.ru":"Бутан","line.country.names.zh-CN":"不丹","line.location.accuracy_radius":"534","line.location.latitude":"27.5","line.location.longitude":"90.5","line.location.time_zone":"Asia/Thimphu","line.registered_country.geoname_id":"798549","line.registered_country.is_in_european_union":"true","line.registered_country.iso_code":"RO","line.registered_country.names.de":"Rumänien","line.registered_country.names.en":"Romania","line.registered_country.names.es":"Rumanía","line.registered_country.names.fr":"Roumanie","line.registered_country.names.ja":"ルーマニア","line.registered_country.names.pt-BR":"Romênia","line.registered_country.names.ru":"Румыния","line.registered_country.names.zh-CN":"罗马尼亚","line.traits.is_anonymous_proxy":"true"}'
 
-  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2 line + json | jq -Sc -r ."
+  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::"}'
 }
@@ -158,19 +158,9 @@ load ./test_common
 @test "geo_ip2_asn" {
   run bash -c "echo 12.81.92.0 | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
-  assert_output '{"line":"12.81.92.0","line.asn":"AS7018"}'
+  assert_output '{"line":"12.81.92.0","line.geoip2.asn.asn":"AS7018","line.geoip2.asn.asn_org":"AT&T Services"}'
 
   run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
-  assert_output '{"line":"2600:7000::","line.asn":"AS6939"}'
-}
-
-@test "geo_ip2_org" {
-  run bash -c "echo 12.81.92.0 | $DAP_EXECUTABLE lines + geo_ip2_org line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"12.81.92.0","line.org":"AT&T Services"}'
-
-  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_org line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"2600:7000::","line.org":"Hurricane Electric, Inc."}'
+  assert_output '{"line":"2600:7000::","line.geoip2.asn.asn":"AS6939","line.geoip2.asn.asn_org":"Hurricane Electric, Inc."}'
 }

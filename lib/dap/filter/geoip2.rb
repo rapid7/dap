@@ -39,7 +39,7 @@ end
 #
 # Add GeoIP2 tags using the MaxMind GeoIP2::City
 #
-class FilterGeoIP2
+class FilterGeoIP2City
   include BaseDecoder
   include GeoIP2Library
   def decode(ip)
@@ -52,23 +52,7 @@ class FilterGeoIP2
 end
 
 #
-# Add GeoIP2 org tags using the MaxMind GeoIP2::ASN database
-#
-class FilterGeoIP2Org
-  include BaseDecoder
-  include GeoIP2Library
-  def decode(ip)
-    unless @@geo_asn
-      raise "No MaxMind GeoIP2::ASN data found"
-    end
-    geo_hash = @@geo_asn.get(ip)
-    return unless (geo_hash and geo_hash['autonomous_system_organization'])
-    { :org => geo_hash['autonomous_system_organization'] }
-  end
-end
-
-#
-# Add GeoIP2 ASN tags using the MaxMind GeoIP2::ASN database
+# Add GeoIP2 ASN and Org tags using the MaxMind GeoIP2::ASN database
 #
 class FilterGeoIP2Asn
   include BaseDecoder
@@ -78,8 +62,8 @@ class FilterGeoIP2Asn
       raise "No MaxMind GeoIP2::ASN data found"
     end
     geo_hash = @@geo_asn.get(ip)
-    return unless (geo_hash and geo_hash['autonomous_system_number'])
-    { :asn => "AS#{geo_hash['autonomous_system_number']}" }
+    return unless (geo_hash && geo_hash.keys == %w(autonomous_system_number autonomous_system_organization))
+    { "geoip2.asn.asn": "AS#{geo_hash["autonomous_system_number"]}", "geoip2.asn.asn_org": geo_hash["autonomous_system_organization"] }
   end
 end
 
