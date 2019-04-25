@@ -67,7 +67,7 @@ class FilterGeoIP2City
     city.geoname_id \
     continent.code continent.geoname_id \
     country.geoname_id country.iso_code country.is_in_european_union \
-    location.accuracy_radius location.latitude location.longitude location.time_zone \
+    location.accuracy_radius location.latitude location.longitude location.metro_code location.time_zone \
     postal.code \
     registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
     represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union \
@@ -121,10 +121,13 @@ class FilterGeoIP2City
 
   def defaults()
     ret = {}
+    default_int_suffixes = %w(geoname_id metro_code)
+    default_bool_suffixes = %w(is_in_european_union is_anonymous_proxy is_satellite_provider)
     DESIRED_GEOIP2_KEYS.each do |k|
-      if k.end_with? "geoname_id"
+      suffix = k.split(/\./)[-1]
+      if default_int_suffixes.include?(suffix)
         ret["geoip2.city.#{k}"] = "0"
-      elsif k =~ /\.is_[^\.]+$/
+      elsif default_bool_suffixes.include?(suffix)
         ret["geoip2.city.#{k}"] = "false"
       else
         ret["geoip2.city.#{k}"] = ""
