@@ -63,7 +63,14 @@ class FilterGeoIP2City
 
   GEOIP2_LANGUAGE = ENV["GEOIP2_LANGUAGE"] || "en"
   LOCALE_SPECIFIC_NAMES = %w(city.names continent.names country.names registered_country.names)
-  DESIRED_GEOIP2_KEYS = %w(city.geoname_id continent.code continent.geoname_id country.geoname_id country.iso_code country.is_in_european_union location.accuracy_radius location.latitude location.longitude location.time_zone registered_country.geoname_id registered_country.iso_code)
+  DESIRED_GEOIP2_KEYS = %w(\
+    city.geoname_id \
+    continent.code continent.geoname_id \
+    country.geoname_id country.iso_code country.is_in_european_union \
+    location.accuracy_radius location.latitude location.longitude location.time_zone \
+    postal.code \
+    registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
+  )
 
   attr_reader :locale_specific_names
   def initialize(args={})
@@ -77,10 +84,32 @@ class FilterGeoIP2City
     end
     return unless (geo_hash = @@geo_city.get(ip))
     ret = {}
+
+    if geo_hash.include?("subdivisions")
+      # handle countries that are divided into various subdivisions.  generally 1, sometimes 2
+      subdivisions = geo_hash["subdivisions"]
+      geo_hash.delete("subdivisions")
+      ret["geoip2.subdivisions.length"] = subdivisions.size.to_s
+      subdivisions.each_index do |i|
+        subdivision = subdivisions[i]
+        subdivision.each_pair do |k,v|
+          if %w(geoname_id iso_code).include?(k)
+            ret["geoip2.subdivisions.#{i+1}.#{k}"] = v.to_s
+          elsif k == "names"
+            if v.include?(GEOIP2_LANGUAGE)
+              ret["geoip2.subdivisions.#{i+1}.name"] = subdivision["names"][GEOIP2_LANGUAGE]
+            end
+          end
+        end
+      end
+    end
+
     Dap::Utils::Misc.flatten_hash(geo_hash).each_pair do |k,v|
       if DESIRED_GEOIP2_KEYS.include?(k)
+        # these keys we can just copy directly over
         ret["geoip2.city.#{k}"] = v
       elsif @locale_specific_names.include?(k)
+        # these keys we need to pick the locale-specific name and set the key accordingly
         lsn_renamed = k.gsub(/\.names.#{GEOIP2_LANGUAGE}/, ".name")
         ret["geoip2.city.#{lsn_renamed}"] = v
       end
