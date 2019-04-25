@@ -95,10 +95,10 @@ class FilterGeoIP2City
         subdivision = subdivisions[i]
         subdivision.each_pair do |k,v|
           if %w(geoname_id iso_code).include?(k)
-            ret["geoip2.subdivisions.#{i+1}.#{k}"] = v.to_s
+            ret["geoip2.subdivisions.#{i}.#{k}"] = v.to_s
           elsif k == "names"
             if v.include?(GEOIP2_LANGUAGE)
-              ret["geoip2.subdivisions.#{i+1}.name"] = subdivision["names"][GEOIP2_LANGUAGE]
+              ret["geoip2.subdivisions.#{i}.name"] = subdivision["names"][GEOIP2_LANGUAGE]
             end
           end
         end
