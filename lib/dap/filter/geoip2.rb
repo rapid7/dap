@@ -42,6 +42,17 @@ end
 class FilterGeoIP2City
   include BaseDecoder
   include GeoIP2Library
+
+  GEOIP2_LANGUAGE = ENV["GEOIP2_LANGUAGE"] || "en"
+  LOCALE_SPECIFIC_NAMES = %w(continent.names country.names registered_country.names)
+  DESIRED_GEOIP2_KEYS = %w(continent.code continent.geoname_id country.geoname_id country.iso_code location.accuracy_radius location.latitude location.longitude location.time_zone registered_country.geoname_id registered_country.iso_code)
+
+  attr_reader :locale_specific_names
+  def initialize(args={})
+    @locale_specific_names = LOCALE_SPECIFIC_NAMES.map { |lsn| "#{lsn}.#{GEOIP2_LANGUAGE}" }
+    super
+  end
+
   def decode(ip)
     unless @@geo_city
       raise "No MaxMind GeoIP2::City data found"
@@ -49,7 +60,12 @@ class FilterGeoIP2City
     return unless (geo_hash = @@geo_city.get(ip))
     ret = {}
     Dap::Utils::Misc.flatten_hash(geo_hash).each_pair do |k,v|
-      ret["geoip2.city.#{k}"] = v
+      if DESIRED_GEOIP2_KEYS.include?(k)
+        ret["geoip2.city.#{k}"] = v
+      elsif @locale_specific_names.include?(k)
+        lsn_renamed = k.gsub(/\.names.#{GEOIP2_LANGUAGE}/, ".name")
+        ret["geoip2.city.#{lsn_renamed}"] = v
+      end
     end
     ret
   end
