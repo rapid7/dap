@@ -63,15 +63,15 @@ class FilterGeoIP2City
 
   GEOIP2_LANGUAGE = ENV["GEOIP2_LANGUAGE"] || "en"
   LOCALE_SPECIFIC_NAMES = %w(city.names continent.names country.names registered_country.names represented_country.names)
-  DESIRED_GEOIP2_KEYS = %w( \
-    city.geoname_id \
-    continent.code continent.geoname_id \
-    country.geoname_id country.iso_code country.is_in_european_union \
-    location.accuracy_radius location.latitude location.longitude location.metro_code location.time_zone \
-    postal.code \
-    registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
-    represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union represented_country.type \
-    traits.is_anonymous_proxy traits.is_satellite_provider \
+  DESIRED_GEOIP2_KEYS = %w(
+    city.geoname_id
+    continent.code continent.geoname_id
+    country.geoname_id country.iso_code country.is_in_european_union
+    location.accuracy_radius location.latitude location.longitude location.metro_code location.time_zone
+    postal.code
+    registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union
+    represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union represented_country.type
+    traits.is_anonymous_proxy traits.is_satellite_provider
   )
 
   attr_reader :locale_specific_names
