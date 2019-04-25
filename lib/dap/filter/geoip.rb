@@ -38,7 +38,7 @@ module GeoIPLibrary
 
   if GEOIP_ORG_DATABASE_PATH
     if ::File.exist?(GEOIP_ORG_DATABASE_PATH)
-      @@geo_org = GeoIP::Organization.new(GEOIP_ORG_DATABASE_PATH)
+      @@geo_orgs = GeoIP::Organization.new(GEOIP_ORG_DATABASE_PATH)
     end
   else
     GEOIP_DIRS.each do |d|
