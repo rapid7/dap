@@ -62,14 +62,15 @@ class FilterGeoIP2City
   include GeoIP2Library
 
   GEOIP2_LANGUAGE = ENV["GEOIP2_LANGUAGE"] || "en"
-  LOCALE_SPECIFIC_NAMES = %w(city.names continent.names country.names registered_country.names)
-  DESIRED_GEOIP2_KEYS = %w(\
+  LOCALE_SPECIFIC_NAMES = %w(city.names continent.names country.names registered_country.names represented_country.names)
+  DESIRED_GEOIP2_KEYS = %w( \
     city.geoname_id \
     continent.code continent.geoname_id \
     country.geoname_id country.iso_code country.is_in_european_union \
     location.accuracy_radius location.latitude location.longitude location.time_zone \
     postal.code \
     registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
+    represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union \
     traits.is_anonymous_proxy traits.is_satellite_provider \
   )
 
@@ -84,7 +85,7 @@ class FilterGeoIP2City
       raise "No MaxMind GeoIP2::City data found"
     end
     return unless (geo_hash = @@geo_city.get(ip))
-    ret = {}
+    ret = defaults
 
     if geo_hash.include?("subdivisions")
       # handle countries that are divided into various subdivisions.  generally 1, sometimes 2
@@ -113,6 +114,20 @@ class FilterGeoIP2City
         # these keys we need to pick the locale-specific name and set the key accordingly
         lsn_renamed = k.gsub(/\.names.#{GEOIP2_LANGUAGE}/, ".name")
         ret["geoip2.city.#{lsn_renamed}"] = v
+      end
+    end
+    ret
+  end
+
+  def defaults()
+    ret = {}
+    DESIRED_GEOIP2_KEYS.each do |k|
+      if k.end_with? "geoname_id"
+        ret["geoip2.city.#{k}"] = "0"
+      elsif k =~ /\.is_[^\.]+$/
+        ret["geoip2.city.#{k}"] = "false"
+      else
+        ret["geoip2.city.#{k}"] = ""
       end
     end
     ret
