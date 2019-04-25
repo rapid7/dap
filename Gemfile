@@ -6,7 +6,7 @@ gem 'net-dns'
 gem 'bit-struct'
 gem 'geoip-c'
 gem 'maxmind-db', '~> 1.0.0'
-gem 'recog', '>=2.1.12'
+gem 'recog', '>=2.3.0'
 
 group :test do
   gem 'rspec', '~> 3.1.0'
