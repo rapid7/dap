@@ -13,7 +13,7 @@ module GeoIP2Library
   ]
   GEOIP_CITY = %W{ GeoLite2-City.mmdb }
   GEOIP_ASN = %W{ GeoLite2-ASN.mmdb }
-  GEOIP_ISP = %W{ GeoLite2-ISP.mmdb }
+  GEOIP_ISP = %W{ GeoIP2-ISP.mmdb }
 
   @@geo_city = nil
   @@geo_asn = nil
