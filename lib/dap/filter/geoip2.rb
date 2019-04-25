@@ -70,7 +70,7 @@ class FilterGeoIP2City
     location.accuracy_radius location.latitude location.longitude location.metro_code location.time_zone \
     postal.code \
     registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
-    represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union \
+    represented_country.geoname_id represented_country.iso_code represented_country.is_in_european_union represented_country.type \
     traits.is_anonymous_proxy traits.is_satellite_provider \
   )
 
@@ -91,15 +91,15 @@ class FilterGeoIP2City
       # handle countries that are divided into various subdivisions.  generally 1, sometimes 2
       subdivisions = geo_hash["subdivisions"]
       geo_hash.delete("subdivisions")
-      ret["geoip2.subdivisions.length"] = subdivisions.size.to_s
+      ret["geoip2.city.subdivisions.length"] = subdivisions.size.to_s
       subdivisions.each_index do |i|
         subdivision = subdivisions[i]
         subdivision.each_pair do |k,v|
           if %w(geoname_id iso_code).include?(k)
-            ret["geoip2.subdivisions.#{i}.#{k}"] = v.to_s
+            ret["geoip2.city.subdivisions.#{i}.#{k}"] = v.to_s
           elsif k == "names"
             if v.include?(GEOIP2_LANGUAGE)
-              ret["geoip2.subdivisions.#{i}.name"] = subdivision["names"][GEOIP2_LANGUAGE]
+              ret["geoip2.city.subdivisions.#{i}.name"] = subdivision["names"][GEOIP2_LANGUAGE]
             end
           end
         end
