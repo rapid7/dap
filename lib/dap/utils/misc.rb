@@ -11,7 +11,7 @@ module Misc
           ret["#{k}.#{fk}"] = fv.to_s
         end
       else
-        ret[k] = v.to_s
+        ret[k.to_s] = v.to_s
       end
     end
     ret
