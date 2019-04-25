@@ -147,7 +147,7 @@ load ./test_common
 
 @test "geo_ip2_city" {
   # test with default language
-  run bash -c "echo 81.2.69.142 | $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
+  run bash -c "echo 81.2.69.142 | GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
   assert_success
   assert_output ''
 
@@ -156,17 +156,17 @@ load ./test_common
   assert_success
   assert_output ''
 
-  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
+  run bash -c "echo 2600:7000:: | GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::"}'
 }
 
 @test "geo_ip2_asn" {
-  run bash -c "echo 12.81.92.0 | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
+  run bash -c "echo 12.81.92.0 | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"12.81.92.0","line.geoip2.asn.asn":"AS7018","line.geoip2.asn.asn_org":"AT&T Services"}'
 
-  run bash -c "echo 2600:7000:: | $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
+  run bash -c "echo 2600:7000:: | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::","line.geoip2.asn.asn":"AS6939","line.geoip2.asn.asn_org":"Hurricane Electric, Inc."}'
 }
