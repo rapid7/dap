@@ -47,7 +47,11 @@ class FilterGeoIP2City
       raise "No MaxMind GeoIP2::City data found"
     end
     return unless (geo_hash = @@geo_city.get(ip))
-    return Dap::Utils::Misc.flatten_hash(geo_hash)
+    ret = {}
+    Dap::Utils::Misc.flatten_hash(geo_hash).each_pair do |k,v|
+      ret["geoip2.city.#{k}"] = v
+    end
+    ret
   end
 end
 
