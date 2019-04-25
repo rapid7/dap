@@ -16,26 +16,54 @@ module GeoIPLibrary
   @@geo_orgs = nil
   @@geo_asn = nil
 
-  GEOIP_DIRS.each do |d|
-    GEOIP_CITY.each do |f|
-      path = File.join(d, f)
-      if ::File.exist?(path)
-        @@geo_city = GeoIP::City.new(path)
-        break
+  GEOIP_CITY_DATABASE_PATH = ENV["GEOIP_CITY_DATABASE_PATH"]
+  GEOIP_ASN_DATABASE_PATH = ENV["GEOIP_ASN_DATABASE_PATH"]
+  GEOIP_ORG_DATABASE_PATH = ENV["GEOIP_ORG_DATABASE_PATH"]
+
+  if GEOIP_CITY_DATABASE_PATH
+    if ::File.exist?(GEOIP_CITY_DATABASE_PATH)
+      @@geo_city = GeoIP::City.new(GEOIP_CITY_DATABASE_PATH)
+    end
+  else
+    GEOIP_DIRS.each do |d|
+      GEOIP_CITY.each do |f|
+        path = File.join(d, f)
+        if ::File.exist?(path)
+          @@geo_city = GeoIP::City.new(path)
+          break
+        end
       end
     end
-    GEOIP_ORGS.each do |f|
-      path = File.join(d, f)
-      if ::File.exist?( path )
-        @@geo_orgs = GeoIP::Organization.new(path)
-        break
+  end
+
+  if GEOIP_ORG_DATABASE_PATH
+    if ::File.exist?(GEOIP_ORG_DATABASE_PATH)
+      @@geo_org = GeoIP::Organization.new(GEOIP_ORG_DATABASE_PATH)
+    end
+  else
+    GEOIP_DIRS.each do |d|
+      GEOIP_ORGS.each do |f|
+        path = File.join(d, f)
+        if ::File.exist?( path )
+          @@geo_orgs = GeoIP::Organization.new(path)
+          break
+        end
       end
     end
-    GEOIP_ASN.each do |f|
-      path = File.join(d, f)
-      if ::File.exist?(path)
-        @@geo_asn = GeoIP::Organization.new(path)
-        break
+  end
+
+  if GEOIP_ASN_DATABASE_PATH
+    if ::File.exist?(GEOIP_ASN_DATABASE_PATH)
+      @@geo_asn = GeoIP::Organization.new(GEOIP_ASN_DATABASE_PATH)
+    end
+  else
+    GEOIP_DIRS.each do |d|
+      GEOIP_ASN.each do |f|
+        path = File.join(d, f)
+        if ::File.exist?(path)
+          @@geo_asn = GeoIP::Organization.new(path)
+          break
+        end
       end
     end
   end
