@@ -70,6 +70,7 @@ class FilterGeoIP2City
     location.accuracy_radius location.latitude location.longitude location.time_zone \
     postal.code \
     registered_country.geoname_id registered_country.iso_code registered_country.is_in_european_union \
+    traits.is_anonymous_proxy traits.is_satellite_provider \
   )
 
   attr_reader :locale_specific_names
