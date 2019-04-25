@@ -171,3 +171,13 @@ load ./test_common
   assert_success
   assert_output '{"line":"2600:7000::","line.geoip2.asn.asn":"AS6939","line.geoip2.asn.asn_org":"Hurricane Electric, Inc."}'
 }
+
+@test "geo_ip2_isp" {
+  run bash -c "echo 12.81.92.0 | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"12.81.92.0","line.geoip2.isp.asn":"AS7018","line.geoip2.isp.asn_org":"","line.geoip2.isp.isp":"AT&T Services","line.geoip2.isp.org":"AT&T Services"}'
+
+  run bash -c "echo 2600:7000:: | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"2600:7000::","line.geoip2.isp.asn":"AS6939","line.geoip2.isp.asn_org":"Hurricane Electric, Inc.","line.geoip2.isp.isp":"","line.geoip2.isp.org":""}'
+}

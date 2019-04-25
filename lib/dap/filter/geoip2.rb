@@ -13,12 +13,15 @@ module GeoIP2Library
   ]
   GEOIP_CITY = %W{ GeoLite2-City.mmdb }
   GEOIP_ASN = %W{ GeoLite2-ASN.mmdb }
+  GEOIP_ISP = %W{ GeoLite2-ISP.mmdb }
 
   @@geo_city = nil
   @@geo_asn = nil
+  @@geo_isp = nil
 
   GEOIP2_CITY_DATABASE_PATH = ENV["GEOIP2_CITY_DATABASE_PATH"]
   GEOIP2_ASN_DATABASE_PATH = ENV["GEOIP2_ASN_DATABASE_PATH"]
+  GEOIP2_ISP_DATABASE_PATH = ENV["GEOIP2_ISP_DATABASE_PATH"]
 
   if GEOIP2_CITY_DATABASE_PATH
     if ::File.exist?(GEOIP2_CITY_DATABASE_PATH)
@@ -46,6 +49,22 @@ module GeoIP2Library
         path = File.join(d, f)
         if ::File.exist?(path)
           @@geo_asn = MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
+          break
+        end
+      end
+    end
+  end
+
+  if GEOIP2_ISP_DATABASE_PATH
+    if ::File.exist?(GEOIP2_ISP_DATABASE_PATH)
+      @@geo_isp = MaxMind::DB.new(GEOIP2_ISP_DATABASE_PATH, mode: MaxMind::DB::MODE_MEMORY)
+    end
+  else
+    GEOIP_DIRS.each do |d|
+      GEOIP_ISP.each do |f|
+        path = File.join(d, f)
+        if ::File.exist?(path)
+          @@geo_isp = MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
           break
         end
       end
@@ -143,13 +162,77 @@ end
 class FilterGeoIP2Asn
   include BaseDecoder
   include GeoIP2Library
+
   def decode(ip)
     unless @@geo_asn
       raise "No MaxMind GeoIP2::ASN data found"
     end
     geo_hash = @@geo_asn.get(ip)
-    return unless (geo_hash && geo_hash.keys == %w(autonomous_system_number autonomous_system_organization))
-    { "geoip2.asn.asn": "AS#{geo_hash["autonomous_system_number"]}", "geoip2.asn.asn_org": geo_hash["autonomous_system_organization"] }
+    return unless geo_hash
+
+    ret = {}
+
+    if geo_hash.include?("autonomous_system_number")
+      ret["geoip2.asn.asn"] = "AS#{geo_hash["autonomous_system_number"]}"
+    else
+      ret["geoip2.asn.asn"] = ""
+    end
+
+    if geo_hash.include?("autonomous_system_organization")
+      ret["geoip2.asn.asn_org"] = "#{geo_hash["autonomous_system_organization"]}"
+    else
+      ret["geoip2.asn.asn_org"] = ""
+    end
+
+    ret
+  end
+end
+
+#
+# Add GeoIP2 ISP tags using the MaxMind GeoIP2::ISP database
+#
+class FilterGeoIP2Isp
+  include BaseDecoder
+  include GeoIP2Library
+  def decode(ip)
+    unless @@geo_isp
+      raise "No MaxMind GeoIP2::ISP data found"
+    end
+    geo_hash = @@geo_isp.get(ip)
+    return unless geo_hash
+
+    ret = {}
+
+    if geo_hash.include?("autonomous_system_number")
+      ret["geoip2.isp.asn"] = "AS#{geo_hash["autonomous_system_number"]}"
+    else
+      ret["geoip2.isp.asn"] = ""
+    end
+
+    if geo_hash.include?("autonomous_system_organization")
+      ret["geoip2.isp.asn_org"] = geo_hash["autonomous_system_organization"]
+    else
+      ret["geoip2.isp.asn_org"] = ""
+    end
+    if geo_hash.include?("autonomous_system_organization")
+      ret["geoip2.isp.asn_org"] = geo_hash["autonomous_system_organization"]
+    else
+      ret["geoip2.isp.asn_org"] = ""
+    end
+
+    if geo_hash.include?("isp")
+      ret["geoip2.isp.isp"] = geo_hash["isp"]
+    else
+      ret["geoip2.isp.isp"] = ""
+    end
+
+    if geo_hash.include?("organization")
+      ret["geoip2.isp.org"] = geo_hash["organization"]
+    else
+      ret["geoip2.isp.org"] = ""
+    end
+
+    ret
   end
 end
 

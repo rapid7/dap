@@ -28,6 +28,7 @@ COPY test/test_data/geoip2/*.mmdb /var/lib/geoip2/
 # Note that these test files were copied from
 # https://github.com/maxmind/MaxMind-DB/raw/f6ed981c23b0eb33d7c07568e2177236252afda6/test-data/GeoLite2-ASN-Test.mmdb
 # https://github.com/maxmind/MaxMind-DB/raw/f6ed981c23b0eb33d7c07568e2177236252afda6/test-data/GeoIP2-City-Test.mmdb
+# https://github.com/maxmind/MaxMind-DB/blob/f6ed981c23b0eb33d7c07568e2177236252afda6/test-data/GeoIP2-ISP-Test.mmdb
 
 # install bats
 RUN git clone https://github.com/sstephenson/bats.git && cd bats && ./install.sh /usr
