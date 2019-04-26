@@ -167,6 +167,7 @@ load ./test_common
   assert_success
   assert_output '{"line":"12.81.92.0","line.geoip2.asn.asn":"AS7018","line.geoip2.asn.asn_org":"AT&T Services"}'
 
+  # test IPv6
   run bash -c "echo 2600:7000:: | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::","line.geoip2.asn.asn":"AS6939","line.geoip2.asn.asn_org":"Hurricane Electric, Inc."}'
@@ -177,7 +178,19 @@ load ./test_common
   assert_success
   assert_output '{"line":"12.81.92.0","line.geoip2.isp.asn":"AS7018","line.geoip2.isp.asn_org":"","line.geoip2.isp.isp":"AT&T Services","line.geoip2.isp.org":"AT&T Services"}'
 
+  # test IPv6
   run bash -c "echo 2600:7000:: | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::","line.geoip2.isp.asn":"AS6939","line.geoip2.isp.asn_org":"Hurricane Electric, Inc.","line.geoip2.isp.isp":"","line.geoip2.isp.org":""}'
+}
+
+@test "geo_ip2_legacy_compat" {
+  run bash -c "echo 81.2.69.142 | GEOIP_CITY_DATABASE_PATH=./test/test_data/geoip/GeoIPCity.dat GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"81.2.69.142","line.city":"London","line.country.name":"United Kingdom","line.country_code":"GB","line.latitude":"51.5142","line.longitude":"-0.0931","line.postal_code":"","line.region":"ENG","line.region_name":"England"}'
+
+  # test IPv6
+  run bash -c "echo 2a02:d9c0:: | GEOIP_CITY_DATABASE_PATH=./test/test_data/geoip/GeoIPCity.dat GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city  line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"2a02:d9c0::","line.country.name":"Turkey","line.country_code":"TR","line.latitude":"39.05901","line.longitude":"34.91155","line.postal_code":""}'
 }
