@@ -180,11 +180,6 @@ class FilterGeoIP2Isp
     else
       ret["geoip2.isp.asn_org"] = ""
     end
-    if geo_hash.include?("autonomous_system_organization")
-      ret["geoip2.isp.asn_org"] = geo_hash["autonomous_system_organization"]
-    else
-      ret["geoip2.isp.asn_org"] = ""
-    end
 
     if geo_hash.include?("isp")
       ret["geoip2.isp.isp"] = geo_hash["isp"]
