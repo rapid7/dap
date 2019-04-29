@@ -174,23 +174,19 @@ load ./test_common
 }
 
 @test "geo_ip2_isp" {
-  run bash -c "echo 12.81.92.0 | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"12.81.92.0","line.geoip2.isp.asn":"AS7018","line.geoip2.isp.asn_org":"","line.geoip2.isp.isp":"AT&T Services","line.geoip2.isp.org":"AT&T Services"}'
-
+  run bash -c "echo -e '12.81.92.0\n2600:7000::' | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
+  assert_line --index 0 '{"line":"12.81.92.0","line.geoip2.isp.asn":"AS7018","line.geoip2.isp.asn_org":"","line.geoip2.isp.isp":"AT&T Services","line.geoip2.isp.org":"AT&T Services"}'
   # test IPv6
-  run bash -c "echo 2600:7000:: | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"2600:7000::","line.geoip2.isp.asn":"AS6939","line.geoip2.isp.asn_org":"Hurricane Electric, Inc.","line.geoip2.isp.isp":"","line.geoip2.isp.org":""}'
+  assert_line --index 1 '{"line":"2600:7000::","line.geoip2.isp.asn":"AS6939","line.geoip2.isp.asn_org":"Hurricane Electric, Inc.","line.geoip2.isp.isp":"","line.geoip2.isp.org":""}'
 }
 
 @test "geo_ip2_legacy_compat" {
-  run bash -c "echo 81.2.69.142 | GEOIP_CITY_DATABASE_PATH=./test/test_data/geoip/GeoIPCity.dat GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
+  run bash -c "echo -e '81.2.69.142\n12.81.92.0\n2a02:d9c0::' | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + geo_ip2_asn line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
   assert_success
-  assert_output '{"line":"81.2.69.142","line.city":"London","line.country.name":"United Kingdom","line.country_code":"GB","line.latitude":"51.5142","line.longitude":"-0.0931","line.postal_code":"","line.region":"ENG","line.region_name":"England"}'
-
-  # test IPv6
-  run bash -c "echo 2a02:d9c0:: | GEOIP_CITY_DATABASE_PATH=./test/test_data/geoip/GeoIPCity.dat GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city  line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
-  assert_success
-  assert_output '{"line":"2a02:d9c0::","line.country.name":"Turkey","line.country_code":"TR","line.latitude":"39.05901","line.longitude":"34.91155","line.postal_code":""}'
+  # this one has no ASN/org data in the test databases
+  assert_line --index 0 '{"line":"81.2.69.142","line.city":"London","line.country.name":"United Kingdom","line.country_code":"GB","line.latitude":"51.5142","line.longitude":"-0.0931","line.postal_code":"","line.region":"ENG","line.region_name":"England"}'
+  # this one has ASN/org data in the test databases but none in the city DB
+  assert_line --index 1 '{"line":"12.81.92.0","line.asn":"AS7018","line.org":"AT&T Services"}'
+  # test IPv6, only city
+  assert_line --index 2 '{"line":"2a02:d9c0::","line.country.name":"Turkey","line.country_code":"TR","line.latitude":"39.05901","line.longitude":"34.91155","line.postal_code":""}'
 }

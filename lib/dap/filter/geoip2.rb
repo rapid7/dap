@@ -262,6 +262,8 @@ class FilterGeoIP2LegacyCompat
       "city.city.name": "city",
       "city.subdivisions.0.iso_code": "region",
       "city.subdivisions.0.name": "region_name",
+      "asn.asn": "asn",
+      "asn.asn_org": "org",
     }
 
     remap.each_pair do |geoip2,geoip|
