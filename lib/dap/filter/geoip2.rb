@@ -263,7 +263,7 @@ class FilterGeoIP2LegacyCompat
       "city.subdivisions.0.iso_code": "region",
       "city.subdivisions.0.name": "region_name",
       "asn.asn": "asn",
-      "asn.asn_org": "org",
+      "isp.asn": "asn",
     }
 
     remap.each_pair do |geoip2,geoip|
@@ -302,6 +302,18 @@ class FilterGeoIP2LegacyCompat
       metro_value = doc[metro_key]
       if !metro_value.empty? && metro_value != "0"
         doc["#{self.base_field}.dma_code"] = metro_value
+      end
+    end
+
+    # get the org key from 3 possible fields in decreasing order of preference
+    asn_org_key = "#{self.base_field}.geoip2.asn.asn_org"
+    isp_asn_org_key = "#{self.base_field}.geoip2.isp.asn_org"
+    isp_org_key = "#{self.base_field}.geoip2.isp.asn_org"
+    [ isp_org_key, isp_asn_org_key, asn_org_key ].each do |k|
+      v = doc[k]
+      if v && !v.empty?
+        doc["#{self.base_field}.org"] = v
+        break
       end
     end
 
