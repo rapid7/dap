@@ -6,70 +6,36 @@ module Filter
 require 'dap/utils/misc'
 
 module GeoIP2Library
-  GEOIP_DIRS = [
+  GEOIP2_DIRS = [
     File.expand_path( File.join( File.dirname(__FILE__), "..", "..", "..", "data")),
     "/var/lib/geoip",
     "/var/lib/geoip2"
   ]
-  GEOIP_CITY = %W{ GeoLite2-City.mmdb }
-  GEOIP_ASN = %W{ GeoLite2-ASN.mmdb }
-  GEOIP_ISP = %W{ GeoIP2-ISP.mmdb }
+  GEOIP2_CITY = %W{ GeoLite2-City.mmdb }
+  GEOIP2_ASN = %W{ GeoLite2-ASN.mmdb }
+  GEOIP2_ISP = %W{ GeoIP2-ISP.mmdb }
 
-  @@geo_city = nil
-  @@geo_asn = nil
-  @@geo_isp = nil
-
-  GEOIP2_CITY_DATABASE_PATH = ENV["GEOIP2_CITY_DATABASE_PATH"]
-  GEOIP2_ASN_DATABASE_PATH = ENV["GEOIP2_ASN_DATABASE_PATH"]
-  GEOIP2_ISP_DATABASE_PATH = ENV["GEOIP2_ISP_DATABASE_PATH"]
-
-  if GEOIP2_CITY_DATABASE_PATH
-    if ::File.exist?(GEOIP2_CITY_DATABASE_PATH)
-      @@geo_city = MaxMind::DB.new(GEOIP2_CITY_DATABASE_PATH, mode: MaxMind::DB::MODE_MEMORY)
-    end
-  else
-    GEOIP_DIRS.each do |d|
-      GEOIP_CITY.each do |f|
-        path = File.join(d, f)
-        if ::File.exist?(path)
-          @@geo_city = MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
-          break
+  def self.find_db(db_file_names, db_dirs, env_path)
+    if env_path
+      if ::File.exist?(env_path)
+        return MaxMind::DB.new(env_path, mode: MaxMind::DB::MODE_MEMORY)
+      end
+    else
+      db_dirs.each do |d|
+        db_file_names.each do |f|
+          path = File.join(d, f)
+          if ::File.exist?(path)
+            return MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
+          end
         end
       end
     end
+    nil
   end
 
-  if GEOIP2_ASN_DATABASE_PATH
-    if ::File.exist?(GEOIP2_ASN_DATABASE_PATH)
-      @@geo_asn = MaxMind::DB.new(GEOIP2_ASN_DATABASE_PATH, mode: MaxMind::DB::MODE_MEMORY)
-    end
-  else
-    GEOIP_DIRS.each do |d|
-      GEOIP_ASN.each do |f|
-        path = File.join(d, f)
-        if ::File.exist?(path)
-          @@geo_asn = MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
-          break
-        end
-      end
-    end
-  end
-
-  if GEOIP2_ISP_DATABASE_PATH
-    if ::File.exist?(GEOIP2_ISP_DATABASE_PATH)
-      @@geo_isp = MaxMind::DB.new(GEOIP2_ISP_DATABASE_PATH, mode: MaxMind::DB::MODE_MEMORY)
-    end
-  else
-    GEOIP_DIRS.each do |d|
-      GEOIP_ISP.each do |f|
-        path = File.join(d, f)
-        if ::File.exist?(path)
-          @@geo_isp = MaxMind::DB.new(path, mode: MaxMind::DB::MODE_MEMORY)
-          break
-        end
-      end
-    end
-  end
+  @@geo_asn = find_db(GEOIP2_ASN, GEOIP2_DIRS, ENV["GEOIP2_ASN_DATABASE_PATH"])
+  @@geo_city = find_db(GEOIP2_CITY, GEOIP2_DIRS, ENV["GEOIP2_CITY_DATABASE_PATH"])
+  @@geo_isp = find_db(GEOIP2_ISP, GEOIP2_DIRS, ENV["GEOIP2_ISP_DATABASE_PATH"])
 end
 
 
