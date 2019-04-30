@@ -47,9 +47,9 @@ of the relevant Maxmind legacy databases in the correct location in
 `/var/lib/geoip` or the `data` directory of your `dap` installation or override
 with an environment variable that specifies the full path to the database in question:
 
-* ASN: `GeoIPASNum.dat` (environment override: `GEOIP_ASN_DATABASE_PATH`)
-* City: `geoip_city.dat` (environment override: `GEOIP_CITY_DATABASE_PATH`)
-* Org: `geoip_org.dat` (environment override: `GEOIP_ORG_DATABASE_PATH`)
+* ASN: `GeoIPASNum.dat` (environment override in 1.4.x+: `GEOIP_ASN_DATABASE_PATH`)
+* City: `geoip_city.dat` (environment override in 1.4.x+: `GEOIP_CITY_DATABASE_PATH`)
+* Org: `geoip_org.dat` (environment override in 1.4.x+: `GEOIP_ORG_DATABASE_PATH`)
 
 ### Ubuntu 16.04+
 
