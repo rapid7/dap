@@ -39,5 +39,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'bit-struct'
   s.add_runtime_dependency 'geoip-c'
   s.add_runtime_dependency 'recog'
+  s.add_runtime_dependency 'maxmind-db'
 
 end
