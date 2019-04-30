@@ -49,7 +49,7 @@ with an environment variable that specifies the full path to the database in que
 
 * ASN: `GeoIPASNum.dat` (environment override: `GEOIP_ASN_DATABASE_PATH`)
 * City: `geoip_city.dat` (environment override: `GEOIP_CITY_DATABASE_PATH`)
-* Org: `geoip_org.dat (environment override: `GEOIP_ORG_DATABASE_PATH`)
+* Org: `geoip_org.dat` (environment override: `GEOIP_ORG_DATABASE_PATH`)
 
 ### Ubuntu 16.04+
 
