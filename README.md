@@ -15,21 +15,46 @@ DAP was written to process terabyte-sized public scan datasets, such as those pr
 
 ### Prerequisites
 
-DAP requires Ruby, and is best suited for systems with a relatively current version with 2.1.0 being the minimum requirement.
+DAP requires Ruby and is best suited for systems with a relatively current version with 2.4.x being the minimum requirement.
 Ideally, this will be managed with either
 [`rbenv`](https://github.com/rbenv/rbenv) or [`rvm`](https://rvm.io/) with the bundler gem also installed and up to date.
 Using system managed/installed Rubies is possible but fraught with peril.
 
-DAP depends on [Maxmind's geoip database](http://dev.maxmind.com/geoip/legacy/downloadable/) to be able to append geographic metadata to analyzed datasets.  If you intend on using this capability, run the following as `root`:
+#### Maxmind IP Location Databases
+
+If you intend on using any of the `geo_ip*` or `geo_ip2*` filters, you must
+install the databases that provide the data for these filters.  If you do not
+intend on using these filters, you can skip this step.
+
+`dap` versions 1.4.x and later depend on [Maxmind's geoip2/geolite2
+databases](https://dev.maxmind.com/geoip/geoip2/geolite2/) to be able to append
+geographic and related metadata to analyzed datasets.  In order to use this
+functionality you must put your copy of the relevant Maxmind databases in the
+correct location in `/var/lib/geoip2` or the `data` directory of your `dap`
+installation or override with an environment variable that specifies the full
+path to the database in question:
+
+* ASN: `GeoLite2-ASN.mmdb` (environment override: `GEOIP2_ASN_DATABASE_PATH`)
+* City: `GeoLite2-City.mmdb` (environment override: `GEOIP2_CITY_DATABASE_PATH`)
+* ISP: `GeoIP2-ISP.mmdb` (environment override: `GEOIP2_ISP_DATABASE_PATH`)
+
+*NOTE*: Prior to `dap` version 1.4.x there was a dependency on [Maxmind's geoip
+database](http://dev.maxmind.com/geoip/legacy/downloadable/)
+to be able to append geographic metadata to analyzed datasets.  However, since
+that time Maxmind has dropped support for these legacy databases.  If you
+intend to continue using this deprecated functionality, you must put your copy
+of the relevant Maxmind legacy databases in the correct location in
+`/var/lib/geoip` or the `data` directory of your `dap` installation or override
+with an environment variable that specifies the full path to the database in question:
+
+* ASN: `GeoIPASNum.dat` (environment override in 1.4.x+: `GEOIP_ASN_DATABASE_PATH`)
+* City: `geoip_city.dat` (environment override in 1.4.x+: `GEOIP_CITY_DATABASE_PATH`)
+* Org: `geoip_org.dat` (environment override in 1.4.x+: `GEOIP_ORG_DATABASE_PATH`)
+
+### Ubuntu 16.04+
 
 ```bash
-sudo mkdir -p /var/lib/geoip && cd /var/lib/geoip && sudo wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo wget http://geolite.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz && sudo gunzip GeoIPASNum.dat.gz
-
-```
-### Ubuntu 16.04
-
-```bash
-sudo apt-get install libgeoip-dev zlib1g-dev ruby ruby-dev gcc make ruby-bundler
+sudo apt-get install zlib1g-dev ruby ruby-dev gcc make ruby-bundler
 gem install dap
 ```
 
@@ -37,7 +62,6 @@ gem install dap
 
 ```bash
 brew update
-brew install geoip
 gem install dap
 ```
 
@@ -57,15 +81,34 @@ To see which input/output formats are supported and what filters are available, 
 This example reads as input a single IP address from `STDIN` in line form, applies geo-ip transformations as a filter on that line, and then returns the output as JSON:
 
 ```
-$  echo 8.8.8.8 | bin/dap + lines + geo_ip line + json
-{"line":"8.8.8.8","line.country_code":"US","line.country_code3":"USA","line.country_name":"United States","line.latitude":"38.0","line.longitude":"-97.0"}
-```
-
-This example does the same, but only outputs the geo-ip country code:
-
-```
-$  echo 8.8.8.8 | bin/dap + lines + geo_ip line + select line.country_code3 + lines
-USA
+$   echo 8.8.8.8 | bin/dap + lines + geo_ip2_city line + json | jq .
+{
+  "line": "8.8.8.8",
+  "line.geoip2.city.city.geoname_id": "0",
+  "line.geoip2.city.continent.code": "NA",
+  "line.geoip2.city.continent.geoname_id": "6255149",
+  "line.geoip2.city.country.geoname_id": "6252001",
+  "line.geoip2.city.country.iso_code": "US",
+  "line.geoip2.city.country.is_in_european_union": "false",
+  "line.geoip2.city.location.accuracy_radius": "1000",
+  "line.geoip2.city.location.latitude": "37.751",
+  "line.geoip2.city.location.longitude": "-97.822",
+  "line.geoip2.city.location.metro_code": "0",
+  "line.geoip2.city.location.time_zone": "America/Chicago",
+  "line.geoip2.city.postal.code": "",
+  "line.geoip2.city.registered_country.geoname_id": "6252001",
+  "line.geoip2.city.registered_country.iso_code": "US",
+  "line.geoip2.city.registered_country.is_in_european_union": "false",
+  "line.geoip2.city.represented_country.geoname_id": "0",
+  "line.geoip2.city.represented_country.iso_code": "",
+  "line.geoip2.city.represented_country.is_in_european_union": "false",
+  "line.geoip2.city.represented_country.type": "",
+  "line.geoip2.city.traits.is_anonymous_proxy": "false",
+  "line.geoip2.city.traits.is_satellite_provider": "false",
+  "line.geoip2.city.continent.name": "North America",
+  "line.geoip2.city.country.name": "United States",
+  "line.geoip2.city.registered_country.name": "United States"
+}
 ```
 
 There are also several examples of how to use DAP along with sample datasets [here](samples).
