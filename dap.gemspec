@@ -5,7 +5,7 @@ require 'dap/version'
 Gem::Specification.new do |s|
   s.name        = 'dap'
   s.version     = Dap::VERSION
-  s.required_ruby_version = '>= 2.1'
+  s.required_ruby_version = '>= 2.4'
   s.authors     = [
       'Rapid7 Research'
   ]
@@ -40,5 +40,4 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'geoip-c'
   s.add_runtime_dependency 'recog'
   s.add_runtime_dependency 'maxmind-db'
-
 end
