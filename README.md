@@ -29,10 +29,10 @@ intend on using these filters, you can skip this step.
 `dap` versions 1.4.x and later depend on [Maxmind's geoip2/geolite2
 databases](https://dev.maxmind.com/geoip/geoip2/geolite2/) to be able to append
 geographic and related metadata to analyzed datasets.  In order to use this
-functionality you must put your copy of the relevant Maxmind legacy databases
-in the correct location in `/var/lib/geoip2` or the `data` directory of your
-`dap` installation or override with an environment variable that specifies the
-full path to the database in question:
+functionality you must put your copy of the relevant Maxmind databases in the
+correct location in `/var/lib/geoip2` or the `data` directory of your `dap`
+installation or override with an environment variable that specifies the full
+path to the database in question:
 
 * ASN: `GeoLite2-ASN.mmdb` (environment override: `GEOIP2_ASN_DATABASE_PATH`)
 * City: `GeoLite2-City.mmdb` (environment override: `GEOIP2_CITY_DATABASE_PATH`)
