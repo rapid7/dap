@@ -184,11 +184,11 @@ load ./test_common
   run bash -c "echo -e '81.2.69.142\n12.81.92.0\n2a02:d9c0::\n2a01:1000::' | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + geo_ip2_asn line + geo_ip2_isp line + geo_ip2_legacy_compat line + match_remove line.geoip2 + json | jq -Sc -r ."
   assert_success
   # this one only has city data, not ASN/org/ISP
-  assert_line --index 0 '{"line":"81.2.69.142","line.city":"London","line.country.name":"United Kingdom","line.country_code":"GB","line.latitude":"51.5142","line.longitude":"-0.0931","line.postal_code":"","line.region":"ENG","line.region_name":"England"}'
+  assert_line --index 0 '{"line":"81.2.69.142","line.city":"London","line.country_code":"GB","line.country_name":"United Kingdom","line.latitude":"51.5142","line.longitude":"-0.0931","line.postal_code":"","line.region":"ENG","line.region_name":"England"}'
   # this one has ASN/org data in the test databases but none in the city DB
   assert_line --index 1 '{"line":"12.81.92.0","line.asn":"AS7018","line.org":"AT&T Services"}'
   # exists only city
-  assert_line --index 2 '{"line":"2a02:d9c0::","line.country.name":"Turkey","line.country_code":"TR","line.latitude":"39.05901","line.longitude":"34.91155","line.postal_code":""}'
+  assert_line --index 2 '{"line":"2a02:d9c0::","line.country_code":"TR","line.country_name":"Turkey","line.latitude":"39.05901","line.longitude":"34.91155","line.postal_code":""}'
   # exists in ISP
   assert_line --index 3 '{"line":"2a01:1000::","line.asn":"AS5617","line.org":"Telekomunikacja Polska S.A."}'
 }
