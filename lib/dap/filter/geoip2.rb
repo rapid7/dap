@@ -238,10 +238,11 @@ class FilterGeoIP2LegacyCompat
       "isp.asn": "asn",
     }
 
+    ret = {}
     remap.each_pair do |geoip2,geoip|
       geoip2_key = "#{self.base_field}.geoip2.#{geoip2}"
       if doc.include?(geoip2_key)
-        doc["#{self.base_field}.#{geoip}"] = doc[geoip2_key]
+        ret["#{self.base_field}.#{geoip}"] = doc[geoip2_key]
       end
     end
 
@@ -256,7 +257,7 @@ class FilterGeoIP2LegacyCompat
     if doc.include?(anon_key)
       anon_value = doc[anon_key]
       if anon_value == "true"
-        doc["#{self.base_field}.country_code"] = "A1"
+        ret["#{self.base_field}.country_code"] = "A1"
       end
     end
 
@@ -264,7 +265,7 @@ class FilterGeoIP2LegacyCompat
     if doc.include?(satellite_key)
       satellite_value = doc[satellite_key]
       if satellite_value == "true"
-        doc["#{self.base_field}.country_code"] = "A1"
+        ret["#{self.base_field}.country_code"] = "A1"
       end
     end
 
@@ -273,7 +274,7 @@ class FilterGeoIP2LegacyCompat
     if doc.include?(metro_key)
       metro_value = doc[metro_key]
       if !metro_value.empty? && metro_value != "0"
-        doc["#{self.base_field}.dma_code"] = metro_value
+        ret["#{self.base_field}.dma_code"] = metro_value
       end
     end
 
@@ -284,12 +285,12 @@ class FilterGeoIP2LegacyCompat
     [ isp_org_key, isp_asn_org_key, asn_org_key ].each do |k|
       v = doc[k]
       if v && !v.empty?
-        doc["#{self.base_field}.org"] = v
+        ret["#{self.base_field}.org"] = v
         break
       end
     end
 
-    [ remove_empties(doc) ]
+    [ doc.merge(remove_empties(ret)) ]
   end
 end
 
