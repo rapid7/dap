@@ -216,7 +216,7 @@ class FilterGeoIP2LegacyCompat
     remap = {
       # geoip2 name -> geoip name
       "city.country.iso_code": "country_code",
-      "city.country.name": "country.name",
+      "city.country.name": "country_name",
       "city.postal.code": "postal_code",
       "city.location.latitude": "latitude",
       "city.location.longitude": "longitude",
