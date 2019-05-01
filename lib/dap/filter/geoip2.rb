@@ -33,6 +33,15 @@ module GeoIP2Library
     nil
   end
 
+  def remove_empties(hash)
+    hash.each_pair do |k,v|
+      if v.empty?
+        hash.delete(k)
+      end
+    end
+    hash
+  end
+
   @@geo_asn = find_db(GEOIP2_ASN, GEOIP2_DIRS, ENV["GEOIP2_ASN_DATABASE_PATH"])
   @@geo_city = find_db(GEOIP2_CITY, GEOIP2_DIRS, ENV["GEOIP2_CITY_DATABASE_PATH"])
   @@geo_isp = find_db(GEOIP2_ISP, GEOIP2_DIRS, ENV["GEOIP2_ISP_DATABASE_PATH"])
@@ -101,7 +110,8 @@ class FilterGeoIP2City
         ret["geoip2.city.#{lsn_renamed}"] = v
       end
     end
-    ret
+
+    remove_empties(ret)
   end
 
   def defaults()
@@ -150,7 +160,7 @@ class FilterGeoIP2Asn
       ret["geoip2.asn.asn_org"] = ""
     end
 
-    ret
+    remove_empties(ret)
   end
 end
 
@@ -193,7 +203,7 @@ class FilterGeoIP2Isp
       ret["geoip2.isp.org"] = ""
     end
 
-    ret
+    remove_empties(ret)
   end
 end
 
@@ -202,6 +212,7 @@ end
 #
 class FilterGeoIP2LegacyCompat
   include Base
+  include GeoIP2Library
 
   attr_accessor :base_field
 
@@ -278,7 +289,7 @@ class FilterGeoIP2LegacyCompat
       end
     end
 
-    [ doc ]
+    [ remove_empties(doc) ]
   end
 end
 
