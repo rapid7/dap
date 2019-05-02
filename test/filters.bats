@@ -191,4 +191,8 @@ load ./test_common
   assert_line --index 2 '{"line":"2a02:d9c0::","line.country_code":"TR","line.country_name":"Turkey","line.latitude":"39.05901","line.longitude":"34.91155"}'
   # exists in ISP
   assert_line --index 3 '{"line":"2a01:1000::","line.asn":"AS5617","line.org":"Telekomunikacja Polska S.A."}'
+
+  run bash -c "echo '{\"ip\": \"4.2.2.1\", \"something_empty\": \"\", \"some_int\": 80}' | GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb dap json + geo_ip2_city ip + geo_ip2_legacy_compat ip + match_remove ip. + json"
+  assert_success
+  assert_output '{"ip":"4.2.2.1","something_empty":"","some_int":80}'
 }
