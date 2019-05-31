@@ -33,6 +33,16 @@ module GeoIP2Library
     nil
   end
 
+  def get_maxmind_data(db, ip)
+    geo_hash = nil
+    begin
+      geo_hash = db.get(ip)
+    rescue IPAddr::InvalidAddressError
+    end
+
+    geo_hash
+  end
+
   def remove_empties(hash)
     hash.each_pair do |k,v|
       if v.empty?
@@ -78,8 +88,9 @@ class FilterGeoIP2City
     unless @@geo_city
       raise "No MaxMind GeoIP2::City data found"
     end
-    return unless (geo_hash = @@geo_city.get(ip))
+
     ret = defaults
+    return unless (geo_hash = get_maxmind_data(@@geo_city, ip))
 
     if geo_hash.include?("subdivisions")
       # handle countries that are divided into various subdivisions.  generally 1, sometimes 2
@@ -143,10 +154,9 @@ class FilterGeoIP2Asn
     unless @@geo_asn
       raise "No MaxMind GeoIP2::ASN data found"
     end
-    geo_hash = @@geo_asn.get(ip)
-    return unless geo_hash
 
     ret = {}
+    return unless (geo_hash = get_maxmind_data(@@geo_asn, ip))
 
     if geo_hash.include?("autonomous_system_number")
       ret["geoip2.asn.asn"] = "AS#{geo_hash["autonomous_system_number"]}"
@@ -174,10 +184,9 @@ class FilterGeoIP2Isp
     unless @@geo_isp
       raise "No MaxMind GeoIP2::ISP data found"
     end
-    geo_hash = @@geo_isp.get(ip)
-    return unless geo_hash
 
     ret = {}
+    return unless (geo_hash = get_maxmind_data(@@geo_isp, ip))
 
     if geo_hash.include?("autonomous_system_number")
       ret["geoip2.isp.asn"] = "AS#{geo_hash["autonomous_system_number"]}"
