@@ -160,6 +160,11 @@ load ./test_common
   run bash -c "echo 2a02:d9c0:: | GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2a02:d9c0::","line.geoip2.city.city.geoname_id":"0","line.geoip2.city.continent.code":"AS","line.geoip2.city.continent.geoname_id":"6255147","line.geoip2.city.continent.name":"Asia","line.geoip2.city.country.geoname_id":"298795","line.geoip2.city.country.is_in_european_union":"false","line.geoip2.city.country.iso_code":"TR","line.geoip2.city.country.name":"Turkey","line.geoip2.city.location.accuracy_radius":"100","line.geoip2.city.location.latitude":"39.05901","line.geoip2.city.location.longitude":"34.91155","line.geoip2.city.location.metro_code":"0","line.geoip2.city.location.time_zone":"Europe/Istanbul","line.geoip2.city.registered_country.geoname_id":"298795","line.geoip2.city.registered_country.is_in_european_union":"false","line.geoip2.city.registered_country.iso_code":"TR","line.geoip2.city.registered_country.name":"Turkey","line.geoip2.city.represented_country.geoname_id":"0","line.geoip2.city.represented_country.is_in_european_union":"false","line.geoip2.city.traits.is_anonymous_proxy":"false","line.geoip2.city.traits.is_satellite_provider":"false"}'
+
+  # test invalid IP
+  run bash -c "echo test | GEOIP2_CITY_DATABASE_PATH=test/test_data/geoip2/GeoIP2-City-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_city line + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"test"}'
 }
 
 @test "geo_ip2_asn" {
@@ -171,13 +176,20 @@ load ./test_common
   run bash -c "echo 2600:7000:: | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
   assert_success
   assert_output '{"line":"2600:7000::","line.geoip2.asn.asn":"AS6939","line.geoip2.asn.asn_org":"Hurricane Electric, Inc."}'
+
+  # test invalid IP
+  run bash -c "echo test | GEOIP2_ASN_DATABASE_PATH=test/test_data/geoip2/GeoLite2-ASN-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_asn line + json | jq -Sc -r ."
+  assert_success
+  assert_output '{"line":"test"}'
 }
 
 @test "geo_ip2_isp" {
-  run bash -c "echo -e '12.81.92.0\n2600:7000::' | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
+  run bash -c "echo -e '12.81.92.0\n2600:7000::\ntest' | GEOIP2_ISP_DATABASE_PATH=test/test_data/geoip2/GeoIP2-ISP-Test.mmdb $DAP_EXECUTABLE lines + geo_ip2_isp line + json | jq -Sc -r ."
   assert_line --index 0 '{"line":"12.81.92.0","line.geoip2.isp.asn":"AS7018","line.geoip2.isp.isp":"AT&T Services","line.geoip2.isp.org":"AT&T Services"}'
   # test IPv6
   assert_line --index 1 '{"line":"2600:7000::","line.geoip2.isp.asn":"AS6939","line.geoip2.isp.asn_org":"Hurricane Electric, Inc."}'
+  # test invalid IP
+  assert_line --index 2 '{"line":"test"}'
 }
 
 @test "geo_ip2_legacy_compat" {
