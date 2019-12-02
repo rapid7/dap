@@ -16,7 +16,7 @@ GEM
       multi_json (>= 1.7.5, < 2.0)
       multi_test (>= 0.1.2)
     diff-lcs (1.2.5)
-    ffi (1.9.10)
+    ffi (1.11.3)
     geoip-c (0.9.1)
     gherkin (2.12.2)
       multi_json (~> 1.3)
