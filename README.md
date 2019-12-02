@@ -9,8 +9,6 @@ DAP reads data using an input plugin, transforms it through a series of filters,
 
 DAP was written to process terabyte-sized public scan datasets, such as those provided by https://scans.io/. Although DAP isn't particularly fast, it can be used across multiple cores (and machines) by splitting the input source and wrapping the execution with GNU Parallel.
 
-
-
 ## Installation
 
 ### Prerequisites
@@ -61,7 +59,10 @@ gem install dap
 ### OS X
 
 ```bash
+# Install the GeoIP C library required by DAP
 brew update
+brew install geoip
+
 gem install dap
 ```
 
@@ -69,7 +70,7 @@ gem install dap
 
 In its simplest form, DAP takes input, applies zero or more filters which modify the input, and then outputs the result.  The input, filters and output are separated by plus signs (`+`).  As seen from `dap -h`:
 
-```
+```shell
 Usage: dap  [input] + [filter] + [output]
        --inputs
        --outputs
@@ -80,7 +81,7 @@ To see which input/output formats are supported and what filters are available, 
 
 This example reads as input a single IP address from `STDIN` in line form, applies geo-ip transformations as a filter on that line, and then returns the output as JSON:
 
-```
+```shell
 $   echo 8.8.8.8 | bin/dap + lines + geo_ip2_city line + json | jq .
 {
   "line": "8.8.8.8",
