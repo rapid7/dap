@@ -4,3 +4,13 @@
 
 # Ignore geoip data file
 data/geoip.dat
+
+/pkg/
+
+## Environment normalization:
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# Misc
+**/.DS_Store
