@@ -15,7 +15,7 @@ module HTMLGhetto
     data.
       to_s.
       encode('UTF-8', invalid: :replace, undef: :replace, replace: '').
-      scan(/<([^>]+)>/m).each do |e|
+      scan(/<([^<>]{1,4096})>/m).each do |e|
 
       e = e.first
 
