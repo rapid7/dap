@@ -152,7 +152,7 @@ describe Dap::Filter::FilterHTMLLinks do
       end
     end
 
-    context 'regex hostile' do
+    context 'repeated less than symbol' do
       body =
         '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'\
         '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'\
