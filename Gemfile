@@ -10,6 +10,6 @@ gem 'recog', '>=2.3.8'
 
 group :test do
   gem 'rspec', '~> 3.9.0'
-  gem 'cucumber', '~> 1.3.16'
-  gem 'aruba', '~> 0.6.1'
+  gem 'cucumber', '~> 4.0.0'
+  gem 'aruba', '~> 0.6.2'
 end
