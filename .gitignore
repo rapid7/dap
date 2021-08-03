@@ -4,6 +4,9 @@
 
 # Ignore geoip data file
 data/geoip.dat
+data/GeoLite2-ASN.mmdb
+data/GeoLite2-City.mmdb
+data/GeoLite2-Country.mmdb
 
 /pkg/
 
