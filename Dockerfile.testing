@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV TEST_DIR /opt/bats_testing
 
@@ -14,7 +14,7 @@ RUN /bin/bash -l -c "rvm requirements"
 RUN /bin/bash -l -c "rvm install 2.4.5"
 RUN /bin/bash -l -c "rvm use 2.4.5 && gem update --system && gem install bundler"
 ADD Gemfile* $TEST_DIR/
-RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.4.5 && bundle install"
+RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.4.5 && bundle update --bundler && bundle install"
 
 # install maxmind legacy data
 RUN mkdir /var/lib/geoip
