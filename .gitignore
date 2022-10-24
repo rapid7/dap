@@ -1,3 +1,8 @@
+# Ruby and tooling specific
+.yardoc
+doc/
+/pkg/
+
 # Ignore rvm files
 .ruby-version
 .ruby-gemset
@@ -7,8 +12,6 @@ data/geoip.dat
 data/GeoLite2-ASN.mmdb
 data/GeoLite2-City.mmdb
 data/GeoLite2-Country.mmdb
-
-/pkg/
 
 ## Environment normalization:
 /.bundle/
