@@ -94,7 +94,7 @@ There are two testing frameworks in place.
 To run these outside of travis-ci, run:
 ```
 docker build -t dap_testing -f Dockerfile.testing . && \
-docker run --rm --name dap_testing -it -e DAP_EXECUTABLE=dap dap_testing /bin/bash -l -c "rvm use 2.4.5 && gem build dap && gem install dap*.gem && bundle exec rspec spec && find /opt/bats_testing -name \*.bats | grep -v test/ test_helper/ | xargs -n1 bats"
+docker run --rm --name dap_testing -it -e DAP_EXECUTABLE=dap dap_testing /bin/bash -l -c "rvm use 2.7.6 && gem build dap && gem install dap*.gem && bundle exec rspec spec && find /opt/bats_testing -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"
 ```
 
 ## Landing PRs

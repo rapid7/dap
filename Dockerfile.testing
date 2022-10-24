@@ -11,10 +11,10 @@ RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import -
 RUN curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
 RUN curl -sSL https://get.rvm.io | bash -s stable
 RUN /bin/bash -l -c "rvm requirements"
-RUN /bin/bash -l -c "rvm install 2.4.5"
-RUN /bin/bash -l -c "rvm use 2.4.5 && gem update --system && gem install bundler"
+RUN /bin/bash -l -c "rvm install 2.7.6"
+RUN /bin/bash -l -c "rvm use 2.7.6 && gem update --system && gem install bundler"
 ADD Gemfile* $TEST_DIR/
-RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.4.5 && bundle update --bundler && bundle install"
+RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.7.6 && bundle update --bundler && bundle install"
 
 # install maxmind legacy data
 RUN mkdir /var/lib/geoip
