@@ -13,7 +13,7 @@ RUN curl -sSL https://get.rvm.io | bash -s stable
 RUN /bin/bash -l -c "rvm requirements"
 RUN /bin/bash -l -c "rvm install 2.7.6"
 RUN /bin/bash -l -c "rvm use 2.7.6 && gem update --system && gem install bundler"
-ADD Gemfile* $TEST_DIR/
+COPY . $TEST_DIR/
 RUN /bin/bash -l -c "cd $TEST_DIR && rvm use 2.7.6 && bundle update --bundler && bundle install"
 
 # install maxmind legacy data
@@ -36,4 +36,3 @@ COPY test/test_data/geoip2/*.mmdb /var/lib/geoip2/
 RUN git clone https://github.com/sstephenson/bats.git && cd bats && ./install.sh /usr
 
 WORKDIR /opt/bats_testing
-COPY . .
