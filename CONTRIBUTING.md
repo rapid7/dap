@@ -81,9 +81,7 @@ Finally, submit the PR.  Navigate to ```https://github.com/<your-github-username
 
 ### Testing
 
-When your PR is submitted, it will be automatically subjected to the full run
-of tests in [Travis](https://travis-ci.org/rapid7/dap/), however you are
-encourage to perform testing _before_ submitting the PR.  There are two types of tests in place:
+You are encourage to perform testing _before_ submitting the PR.  There are two types of tests in place:
 run `bundle exec rspec spec`.  # Testing
 
 There are two testing frameworks in place.
@@ -91,7 +89,7 @@ There are two testing frameworks in place.
 * Ruby `rspec`
 * [bats](https://github.com/sstephenson/bats) integration tests
 
-To run these outside of travis-ci, run:
+To run these tests locally, run:
 ```
 docker build -t dap_testing -f Dockerfile.testing . && \
 docker run --rm --name dap_testing -it -e DAP_EXECUTABLE=dap dap_testing /bin/bash -l -c "rvm use 2.7.6 && gem build dap && gem install dap*.gem && bundle exec rspec spec && find /opt/bats_testing -name \*.bats | grep -v test/test_helper/ | xargs -n1 bats"

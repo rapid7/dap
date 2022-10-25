@@ -1,7 +1,6 @@
 # DAP: The Data Analysis Pipeline
 
 [![Gem Version](https://badge.fury.io/rb/dap.svg)](http://badge.fury.io/rb/dap)
-[![Build Status](https://travis-ci.org/rapid7/dap.svg?branch=master)](https://travis-ci.org/rapid7/dap)
 
 DAP was created to transform text-based data on the command-line, specializing in transforms that are annoying or difficult to do with existing tools.
 
