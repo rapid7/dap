@@ -1,7 +1,6 @@
 # DAP: The Data Analysis Pipeline
 
 [![Gem Version](https://badge.fury.io/rb/dap.svg)](http://badge.fury.io/rb/dap)
-[![Build Status](https://travis-ci.org/rapid7/dap.svg?branch=master)](https://travis-ci.org/rapid7/dap)
 
 DAP was created to transform text-based data on the command-line, specializing in transforms that are annoying or difficult to do with existing tools.
 
@@ -13,7 +12,7 @@ DAP was written to process terabyte-sized public scan datasets, such as those pr
 
 ### Prerequisites
 
-DAP requires Ruby and is best suited for systems with a relatively current version with 2.4.x being the minimum requirement.
+DAP requires Ruby and is best suited for systems with a relatively current version with 2.6.x being the minimum requirement.
 Ideally, this will be managed with either
 [`rbenv`](https://github.com/rbenv/rbenv) or [`rvm`](https://rvm.io/) with the bundler gem also installed and up to date.
 Using system managed/installed Rubies is possible but fraught with peril.
