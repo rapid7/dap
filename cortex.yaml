@@ -1,0 +1,15 @@
+---
+info:
+  title: Dap
+  description: Data Analysis Pipeline
+  x-cortex-git:
+    github:
+      alias: r7org
+      repository: rapid7/dap
+  x-cortex-tag: dap
+  x-cortex-type: service
+  x-cortex-domain-parents:
+  - tag: octo-and-labs
+openapi: 3.0.1
+servers:
+- url: "/"
