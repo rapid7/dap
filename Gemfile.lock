@@ -60,11 +60,11 @@ GEM
     mini_portile2 (2.8.0)
     multi_test (1.1.0)
     net-dns (0.9.0)
-    nokogiri (1.13.9)
+    nokogiri (1.13.10)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     oj (3.13.21)
-    racc (1.6.0)
+    racc (1.6.1)
     rake (13.0.6)
     recog (3.0.3)
       nokogiri
