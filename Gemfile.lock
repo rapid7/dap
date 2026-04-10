@@ -84,9 +84,7 @@ GEM
     sys-uname (1.2.2)
       ffi (~> 1.1)
     thor (1.5.0)
-    webrick (1.7.0)
-    yard (0.9.28)
-      webrick (~> 1.7.0)
+    yard (0.9.39)
 
 PLATFORMS
   ruby
