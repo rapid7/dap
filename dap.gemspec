@@ -5,7 +5,7 @@ require 'dap/version'
 Gem::Specification.new do |s|
   s.name        = 'dap'
   s.version     = Dap::VERSION
-  s.required_ruby_version = '>= 2.6'
+  s.required_ruby_version = '>= 3.1'
   s.authors     = [
       'Rapid7 Research'
   ]
