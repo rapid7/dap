@@ -84,7 +84,7 @@ GEM
     sys-uname (1.2.2)
       ffi (~> 1.1)
     thor (1.5.0)
-    yard (0.9.39)
+    yard (0.9.44)
 
 PLATFORMS
   ruby
@@ -101,4 +101,4 @@ RUBY VERSION
    ruby 3.1.3p185
 
 BUNDLED WITH
-   2.3.24
+   2.6.9
