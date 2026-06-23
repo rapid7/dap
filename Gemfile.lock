@@ -14,17 +14,14 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    aruba (2.1.0)
-      bundler (>= 1.17, < 3.0)
-      childprocess (>= 2.0, < 5.0)
-      contracts (>= 0.16.0, < 0.18.0)
-      cucumber (>= 4.0, < 9.0)
-      rspec-expectations (~> 3.4)
-      thor (~> 1.0)
+    aruba (0.7.4)
+      childprocess (>= 0.3.6)
+      cucumber (>= 1.1.1)
+      rspec-expectations (>= 2.7.0)
+    bigdecimal (4.1.2)
     bit-struct (0.17)
     builder (3.2.4)
     childprocess (4.1.0)
-    contracts (0.16.1)
     cucumber (8.0.0)
       builder (~> 3.2, >= 3.2.4)
       cucumber-ci-environment (~> 9.0, >= 9.0.4)
@@ -63,7 +60,10 @@ GEM
     nokogiri (1.18.10)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    oj (3.13.21)
+    oj (3.17.3)
+      bigdecimal (>= 3.0)
+      ostruct (>= 0.2)
+    ostruct (0.6.3)
     racc (1.8.1)
     rake (13.0.6)
     recog (3.0.3)
@@ -83,7 +83,6 @@ GEM
     rspec-support (3.11.1)
     sys-uname (1.2.2)
       ffi (~> 1.1)
-    thor (1.5.0)
     yard (0.9.44)
 
 PLATFORMS
