@@ -103,6 +103,84 @@ class LDAP
     messages
   end
 
+  # Maximum number of levels asn1_value will unwrap. Responses come from
+  # untrusted hosts and may nest arbitrarily deeply, so bound the recursion
+  # instead of risking stack exhaustion.
+  ASN1_MAX_DEPTH = 32
+
+  # Substituted for values nested beyond ASN1_MAX_DEPTH. Returned as a fresh
+  # String each time: every other value this parser yields is unfrozen, and
+  # filters such as `transform <field>=utf8encode` mutate values in place, so
+  # handing out a shared frozen object would raise FrozenError downstream.
+  ASN1_TOO_DEEP = "[truncated: ASN.1 nesting exceeds #{ASN1_MAX_DEPTH} levels]".freeze
+
+  #
+  # Recursively unwrap an ASN.1 value into JSON-serializable Ruby objects.
+  #
+  # Constructed elements decode to an Array of nested OpenSSL::ASN1 objects
+  # rather than to a String. A referral, for example, is a SEQUENCE OF LDAPURL
+  # (RFC 4511 - 4.1.10), so its value is an Array of OctetStrings. Primitives
+  # are not always Strings either: an INTEGER or ENUMERATED decodes to an
+  # OpenSSL::BN. The JSON output filter dumps with Oj in strict mode and raises
+  # on any of those, so reduce each value to a String, an Array, or a
+  # JSON-native scalar.
+  #
+  # @param value [Object] Decoded ASN.1 value, element, or Array of elements
+  # @param depth [Integer] Current recursion level
+  # @return [Object] String, JSON-native scalar, or Array of either
+  #
+  def self.asn1_value(value, depth = 0)
+    # Much the commonest case by far: a primitive value that is already a String
+    return value if value.is_a?(::String)
+    return ASN1_TOO_DEEP.dup if depth >= ASN1_MAX_DEPTH
+
+    case value
+    when ::Array
+      value.map { |element| asn1_value(element, depth + 1) }
+    when OpenSSL::ASN1::ASN1Data
+      asn1_value(value.value, depth + 1)
+    when ::Numeric, ::TrueClass, ::FalseClass, ::NilClass
+      value
+    else
+      # OpenSSL::BN and friends; keep the field a String rather than emit a
+      # type the JSON output filter cannot dump. +String guarantees the result
+      # is mutable, since callers may transform it in place.
+      +value.to_s
+    end
+  end
+
+  #
+  # Unwrap an ASN.1 value that represents a single LDAPString / LDAPDN.
+  #
+  # Most LDAP text fields are OCTET STRINGs, and BER permits those to be sent
+  # constructed, in which case the value decodes to an Array of segments that
+  # concatenate to form the string. Always returning a String also keeps values
+  # usable as JSON object keys, which Oj requires to be Strings.
+  #
+  # @param value [Object] Decoded ASN.1 value, element, or Array of elements
+  # @return [String] The value as a String
+  #
+  def self.asn1_string(value)
+    return value if value.is_a?(::String)
+
+    unwrapped = asn1_value(value)
+
+    case unwrapped
+    when ::String then unwrapped
+    when ::Array
+      # OpenSSL hands back every decoded string as ASCII-8BIT, so the segments
+      # of a constructed OCTET STRING concatenate cleanly. Force binary anyway:
+      # these are octets, and joining mixed encodings would raise
+      # Encoding::CompatibilityError.
+      unwrapped.flatten.map { |segment| segment.to_s.b }.join
+    else
+      # +String returns a mutable copy when to_s hands back a frozen literal,
+      # as TrueClass#to_s and NilClass#to_s do. Downstream filters such as
+      # `transform <field>=utf8encode` mutate values in place.
+      +unwrapped.to_s
+    end
+  end
+
   #
   # Parse an LDAPResult (not SearchResult) ASN.1 structure
   #   Reference:  https://tools.ietf.org/html/rfc4511#section-4.1.9
@@ -122,8 +200,8 @@ class LDAP
 
     # These are probably safe if the resultCode validates
     results['resultDesc'] = RESULT_DESC[ results['resultCode'] ] if results['resultCode']
-    results['resultMatchedDN'] = ldap_result.value[1].value if ldap_result.value[1] && ldap_result.value[1].value
-    results['resultdiagMessage'] = ldap_result.value[2].value if ldap_result.value[2] && ldap_result.value[2].value
+    results['resultMatchedDN'] = asn1_string(ldap_result.value[1].value) if ldap_result.value[1] && ldap_result.value[1].value
+    results['resultdiagMessage'] = asn1_string(ldap_result.value[2].value) if ldap_result.value[2] && ldap_result.value[2].value
 
     # Handle optional elements that may be returned by certain
     # LDAP application messages
@@ -133,13 +211,21 @@ class LDAP
 
       case element.tag
       when 3
-        results['referral'] = element.value
+        # Referral is a SEQUENCE OF LDAPURL (RFC 4511 - 4.1.10). Keep the list
+        # shape when the element is constructed, as it normally is, but reduce
+        # each URI to a String. A primitive tag 3 stays a bare String.
+        unwrapped = asn1_value(element.value)
+        results['referral'] = if unwrapped.is_a?(::Array)
+                                unwrapped.map { |uri| asn1_string(uri) }
+                              else
+                                asn1_string(unwrapped)
+                              end
       when 7
-        results['serverSaslCreds'] = element.value
+        results['serverSaslCreds'] = asn1_string(element.value)
       when 10
-        results['responseName'] = element.value
+        results['responseName'] = asn1_string(element.value)
       when 11
-        results['responseValue'] = element.value
+        results['responseValue'] = asn1_string(element.value)
       end
     end
 
@@ -176,7 +262,7 @@ class LDAP
       # SearchResultEntry found..
       result_type = 'SearchResultEntry'
       if data.value[1].value[0].tag == 4
-        results['objectName'] = data.value[1].value[0].value
+        results['objectName'] = asn1_string(data.value[1].value[0].value)
       end
 
       if data.value[1].value[1]
@@ -186,10 +272,10 @@ class LDAP
         data.value[1].value[1].each do |partial_attrib|
 
           value_array = []
-          attrib_type = partial_attrib.value[0].value
+          attrib_type = asn1_string(partial_attrib.value[0].value)
 
           partial_attrib.value[1].each do |part_attrib_value|
-            value_array.push(part_attrib_value.value)
+            value_array.push(asn1_string(part_attrib_value.value))
           end
 
           attrib_hash[attrib_type] = value_array
@@ -217,8 +303,8 @@ class LDAP
         # but placed at a higher level in the response, salvage what we can..
         results['resultCode'] = data.value[2].value.to_i if data.value[2].value
         results['resultDesc'] = RESULT_DESC[ results['resultCode'] ] if results['resultCode']
-        results['resultMatchedDN'] = data.value[3].value if data.value[3] && data.value[3].value
-        results['resultdiagMessage'] = data.value[4].value if data.value[4] && data.value[4].value
+        results['resultMatchedDN'] = asn1_string(data.value[3].value) if data.value[3] && data.value[3].value
+        results['resultdiagMessage'] = asn1_string(data.value[4].value) if data.value[4] && data.value[4].value
       end
 
     elsif data.value[1] && data.value[1].tag == 1
